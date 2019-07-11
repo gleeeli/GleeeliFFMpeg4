@@ -20,11 +20,8 @@
 #include <libavcodec/avcodec.h>
 #define INBUF_SIZE 4096
 
-
 /**
- <#Description#>
-
- @param wrap 每一行的数据大小
+ 保存为PGM文件 （PGM是便携式灰度图像格式）
  */
 static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
                      char *filename)
@@ -32,10 +29,41 @@ static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize,
     FILE *f;
     int i;
     f = fopen(filename,"w");
+    //写入pgm文件头
     fprintf(f, "P5\n%d %d\n%d\n", xsize, ysize, 255);
     //依次写入每一行数据
     for (i = 0; i < ysize; i++)
         fwrite(buf + i * wrap, 1, xsize, f);
+    fclose(f);
+}
+
+/**
+ 将每一行的数据写入
+ */
+static void write_raw_data(unsigned char *buf,int wrap,int xsize, int ysize, FILE *f){
+    int i;
+    //依次写入每一行数据
+    for (i = 0; i < ysize; i++)
+        fwrite(buf + i * wrap, 1, xsize, f);
+}
+
+/**
+ 报错为yuv420p格式文件
+
+ @param data yuv数组
+ @param linesize 每行大小数组
+ @param xsize 宽
+ @param ysize 高
+ @param filename 保存文件名
+ */
+static void yuv_save(uint8_t *data[], int linesize[], int xsize, int ysize,
+                     char *filename)
+{
+    FILE *f;
+    f = fopen(filename,"w");
+    write_raw_data(data[0], linesize[0], xsize, ysize, f);
+    write_raw_data(data[1], linesize[1], xsize/2, ysize/2, f);
+    write_raw_data(data[2], linesize[2], xsize/2, ysize/2, f);
     fclose(f);
 }
 
@@ -58,13 +86,20 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
             exit(1);
         }
         printf("saving frame %3d\n", dec_ctx->frame_number);
+        printf("widht:%d,height:%d\n",frame->width,frame->height);
         fflush(stdout);
         /* the picture is allocated by the decoder. no need to
          free it */
         //格式化字符串到buf中，也就是输出文件后部拼接帧序号
         snprintf(buf, sizeof(buf), "%s-%d", filename, dec_ctx->frame_number);
-        pgm_save(frame->data[0], frame->linesize[0],
-                 frame->width, frame->height, buf);
+        
+        char *p="pgm";
+        if(strstr(buf,p)){//是否包含pgm字符串，是则保存为pgm文件
+            pgm_save(frame->data[0], frame->linesize[0],frame->width, frame->height, buf);
+        }else {//保存为yuv420p
+            yuv_save(frame->data, frame->linesize, frame->width, frame->height, buf);
+        }
+        
     }
 }
 
