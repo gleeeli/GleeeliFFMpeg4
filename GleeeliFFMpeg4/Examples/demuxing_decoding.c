@@ -42,7 +42,7 @@ static int audio_frame_count = 0;
  * both paths in your application but pick the one most appropriate to your
  * needs. Look for the use of refcount in this example to see what are the
  * differences of API usage between them. */
-static int refcount = 0;
+static int refcount = 0;//理解：控制多次引用内存，不用反复初始化AVFRame
 
 unsigned char *h264_buf;
 int h264_len;
@@ -219,7 +219,7 @@ int start_main_demuxing_decoding (const char *filename,const char *out_h264File,
         fprintf(stderr, "Could not open source file %s\n", src_filename);
         exit(1);
     }
-    /* retrieve stream information */
+    /* retrieve(检索) stream information */
     if (avformat_find_stream_info(fmt_ctx, NULL) < 0) {
         fprintf(stderr, "Could not find stream information\n");
         exit(1);
@@ -238,6 +238,7 @@ int start_main_demuxing_decoding (const char *filename,const char *out_h264File,
         height = video_dec_ctx->height;
         pix_fmt = video_dec_ctx->pix_fmt;
         
+        //初始化缓冲内存
         //最后一个参数align：比如设置为1，表示按1字节对齐，那么得到的结果就是与实际的内存大小一样。
         //再比如设置为4，表示按4字节对齐。也就是内存的起始地址必须是4的整倍数。
         ret = av_image_alloc(video_dst_data, video_dst_linesize,

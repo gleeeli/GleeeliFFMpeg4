@@ -176,7 +176,7 @@ int start_main_decode_video(const char *filename, const char *outfilename)
             }
             data      += ret;
             data_size -= ret;
-            if (pkt->size)
+            if (pkt->size)//大于0代表本轮数据获取完成，不然需要继续调用av_parser_parse2
                 decode(c, frame, pkt, outfilename);
         }
     }

@@ -32,6 +32,8 @@
 		1909E01B22BB55DE00A2C24A /* test2.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 1909E01A22BB55DE00A2C24A /* test2.mp3 */; };
 		1909E02822BB7D5000A2C24A /* ResampleAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 1909E02722BB7D5000A2C24A /* ResampleAudio.m */; };
 		1909E03422BB867B00A2C24A /* recorder_normal_44100_mono.pcm in Resources */ = {isa = PBXBuildFile; fileRef = 1909E03322BB867B00A2C24A /* recorder_normal_44100_mono.pcm */; };
+		1910F27D22D8197600A42293 /* GlCommTools.c in Sources */ = {isa = PBXBuildFile; fileRef = 1910F27C22D8197600A42293 /* GlCommTools.c */; };
+		1910F28122D822E200A42293 /* GlVideoDecoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 1910F27F22D822E200A42293 /* GlVideoDecoder.c */; };
 		1939EC9422C1B498008BF118 /* output.h264 in Resources */ = {isa = PBXBuildFile; fileRef = 1939EC9322C1B498008BF118 /* output.h264 */; };
 		1962859B22BCC31900C5EAB0 /* test3.mp2 in Resources */ = {isa = PBXBuildFile; fileRef = 1962859A22BCC31900C5EAB0 /* test3.mp2 */; };
 		19B7E58422C064BE00E60075 /* decode_video.c in Sources */ = {isa = PBXBuildFile; fileRef = 19B7E58322C064BE00E60075 /* decode_video.c */; };
@@ -185,6 +187,10 @@
 		1909E02622BB7D5000A2C24A /* ResampleAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ResampleAudio.h; sourceTree = "<group>"; };
 		1909E02722BB7D5000A2C24A /* ResampleAudio.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ResampleAudio.m; sourceTree = "<group>"; };
 		1909E03322BB867B00A2C24A /* recorder_normal_44100_mono.pcm */ = {isa = PBXFileReference; lastKnownFileType = file; path = recorder_normal_44100_mono.pcm; sourceTree = "<group>"; };
+		1910F27B22D8197600A42293 /* GlCommTools.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlCommTools.h; sourceTree = "<group>"; };
+		1910F27C22D8197600A42293 /* GlCommTools.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GlCommTools.c; sourceTree = "<group>"; };
+		1910F27F22D822E200A42293 /* GlVideoDecoder.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GlVideoDecoder.c; sourceTree = "<group>"; };
+		1910F28022D822E200A42293 /* GlVideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoDecoder.h; sourceTree = "<group>"; };
 		1939EC9322C1B498008BF118 /* output.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = output.h264; sourceTree = "<group>"; };
 		1962859A22BCC31900C5EAB0 /* test3.mp2 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test3.mp2; sourceTree = "<group>"; };
 		19B7E58222C064BE00E60075 /* decode_video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = decode_video.h; sourceTree = "<group>"; };
@@ -239,6 +245,7 @@
 		1909DEBD22BB2B4A00A2C24A /* GleeeliFFMpeg4 */ = {
 			isa = PBXGroup;
 			children = (
+				1910F27E22D822E200A42293 /* GlVideoDecoder */,
 				1909E01622BB329200A2C24A /* Examples */,
 				1909E01422BB2F7B00A2C24A /* Comm */,
 				1909DEBE22BB2B4A00A2C24A /* AppDelegate.h */,
@@ -486,6 +493,8 @@
 			isa = PBXGroup;
 			children = (
 				1909E01522BB2F8C00A2C24A /* CommHeader.h */,
+				1910F27B22D8197600A42293 /* GlCommTools.h */,
+				1910F27C22D8197600A42293 /* GlCommTools.c */,
 			);
 			path = Comm;
 			sourceTree = "<group>";
@@ -503,6 +512,15 @@
 				19B7E58822C077F000E60075 /* demuxing_decoding.c */,
 			);
 			path = Examples;
+			sourceTree = "<group>";
+		};
+		1910F27E22D822E200A42293 /* GlVideoDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				1910F27F22D822E200A42293 /* GlVideoDecoder.c */,
+				1910F28022D822E200A42293 /* GlVideoDecoder.h */,
+			);
+			path = GlVideoDecoder;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -585,7 +603,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1910F28122D822E200A42293 /* GlVideoDecoder.c in Sources */,
 				19B7E58922C077F000E60075 /* demuxing_decoding.c in Sources */,
+				1910F27D22D8197600A42293 /* GlCommTools.c in Sources */,
 				1909DEC322BB2B4A00A2C24A /* ViewController.m in Sources */,
 				1909DECE22BB2B4B00A2C24A /* main.m in Sources */,
 				1909E02822BB7D5000A2C24A /* ResampleAudio.m in Sources */,

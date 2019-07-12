@@ -15,8 +15,9 @@
  解封装
  
  @param filename 源文件
- @param out_videofile 纯视频文件
- @param out_audiofile 纯音频文件
+ @param out_h264File 码流h264
+ @param out_videofile 纯视频文件yuv
+ @param out_audiofile 纯音频文件 aac
  */
 int start_main_demuxing_decoding (const char *filename,const char *out_h264File, const char *out_videofile,const char *out_audiofile);
 

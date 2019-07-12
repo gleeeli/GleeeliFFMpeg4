@@ -142,7 +142,7 @@ int start_main_decode_audio4(const char *outfilename, const char *filename)
         //本次去读数据长度ret，下次指针位置后移
         data      += ret;
         data_size -= ret;
-        if (pkt->size)
+        if (pkt->size)//大于0代表本轮数据获取完成，不然需要继续调用av_parser_parse2
             decode(c, pkt, decoded_frame, outfile);
         if (data_size < AUDIO_REFILL_THRESH) {
             memmove(inbuf, data, data_size);

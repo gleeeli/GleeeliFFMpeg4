@@ -12,6 +12,7 @@
 #import "ResampleAudio.h"
 #import "demuxing_decoding.h"
 #import "decode_video.h"
+#include "GlVideoDecoder.h"
 
 @interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) ResampleAudio *audio;
@@ -28,6 +29,7 @@
     [self.muArray addObject:@"解码音频，mp2转pcm"];
     [self.muArray addObject:@"解码视频，h264解码，每一帧单独存为一个YUV文件"];
     [self.muArray addObject:@"解封装，mp4生成h264，生成YUV，生成PCM"];
+    [self.muArray addObject:@"解码视频文件"];
     
 }
 
@@ -87,6 +89,27 @@
     start_main_demuxing_decoding(mp4path,h264path, videopath, audiopath);
 }
 
+- (void)video_decoder {
+    
+    NSString *mp4filePath = [[NSBundle mainBundle] pathForResource:@"output_ss6_t10" ofType:@"mp4"];
+    const char *mp4path = [mp4filePath UTF8String];
+    
+    NSString *videofilePath = [kPathDocument stringByAppendingPathComponent:@"movie_video.yuv"];
+    const char *videopath = [videofilePath UTF8String];
+    NSLog(@"解封装后的video_yuv文件路径：%@",videofilePath);
+    
+    
+    NSString *pcmfilePath = [kPathDocument stringByAppendingPathComponent:@"movie_audioPcm.pcm"];
+    const char *pcmpath = [pcmfilePath UTF8String];
+    NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
+    
+    init_0utput_file(videopath, pcmpath);
+    testPrint();
+    
+    start_play_video(mp4path);
+}
+
+
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     return 40;
@@ -119,6 +142,9 @@
     else if ([title isEqualToString:@"解封装，mp4生成h264，生成YUV，生成PCM"])
     {
         [self demuxing_decoding];
+    }else if ([title isEqualToString:@"解码视频文件"])
+    {
+        [self video_decoder];
     }
     
     
