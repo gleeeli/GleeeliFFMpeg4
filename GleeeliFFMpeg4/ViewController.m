@@ -89,6 +89,16 @@
     start_main_demuxing_decoding(mp4path,h264path, videopath, audiopath);
 }
 
+int get_audio_data_fun(const void *audio_frame_bytes) {
+    
+    return 0;
+}
+
+int get_video_data_fun(const void *video_frame_bytes) {
+    
+    return 0;
+}
+
 - (void)video_decoder {
     
     NSString *mp4filePath = [[NSBundle mainBundle] pathForResource:@"output_ss6_t10" ofType:@"mp4"];
@@ -106,8 +116,10 @@
     init_0utput_file(videopath, pcmpath);
     testPrint();
     
-    start_play_video(mp4path);
+    start_play_video(mp4path,get_audio_data_fun,get_video_data_fun);
 }
+
+
 
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath

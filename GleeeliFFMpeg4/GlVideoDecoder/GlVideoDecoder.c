@@ -40,6 +40,9 @@ static int refcount = 0;//理解：控制多次引用内存，不用反复初始
  */
 static int status = 0;
 
+static int (*get_audio_data_fun)(const void *audio_frame_bytes);
+static int (*get_video_data_fun)(const void *video_frame_bytes);
+
 
 void init_0utput_file(const char *out_yuv_path,const char *out_pcm_path) {
     video_yuv_filePath = out_yuv_path;
@@ -140,6 +143,9 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
                 for (i = 0; i < frame->nb_samples; i++)
                     for (ch = 0; ch < dec_ctx->channels; ch++)
                         fwrite(frame->data[ch] + data_size*i, 1, data_size, audio_pcm_file);
+                
+                const void *audio_frame_bytes;
+                get_audio_data_fun(audio_frame_bytes);
             }
             
         }
@@ -197,7 +203,11 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
-int start_play_video(const char *filePaht) {
+int start_play_video(const char *filePaht,int (*get_audio_data)(const void *audio_frame_bytes),int (*get_video_data)(const void *video_frame_bytes)) {
+    
+    get_audio_data_fun = get_audio_data;
+    get_video_data_fun = get_video_data;
+    
     int ret = 0;
     video_src_filePath = filePaht;
     //打开文件 初始化格式上下文
