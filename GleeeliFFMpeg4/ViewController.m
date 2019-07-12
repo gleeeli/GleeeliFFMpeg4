@@ -12,18 +12,21 @@
 #import "ResampleAudio.h"
 #import "demuxing_decoding.h"
 #import "decode_video.h"
-#include "GlVideoDecoder.h"
+#import "GlPlayerViewController.h"
 
 @interface ViewController ()<UITableViewDelegate,UITableViewDataSource>
 @property (nonatomic, strong) ResampleAudio *audio;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) NSMutableArray *muArray;
+
 @end
 
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+    
     
     self.muArray = [[NSMutableArray alloc] init];
     [self.muArray addObject:@"解码音频，mp2转pcm"];
@@ -89,38 +92,6 @@
     start_main_demuxing_decoding(mp4path,h264path, videopath, audiopath);
 }
 
-int get_audio_data_fun(const void *audio_frame_bytes) {
-    
-    return 0;
-}
-
-int get_video_data_fun(const void *video_frame_bytes) {
-    
-    return 0;
-}
-
-- (void)video_decoder {
-    
-    NSString *mp4filePath = [[NSBundle mainBundle] pathForResource:@"output_ss6_t10" ofType:@"mp4"];
-    const char *mp4path = [mp4filePath UTF8String];
-    
-    NSString *videofilePath = [kPathDocument stringByAppendingPathComponent:@"movie_video.yuv"];
-    const char *videopath = [videofilePath UTF8String];
-    NSLog(@"解封装后的video_yuv文件路径：%@",videofilePath);
-    
-    
-    NSString *pcmfilePath = [kPathDocument stringByAppendingPathComponent:@"movie_audioPcm.pcm"];
-    const char *pcmpath = [pcmfilePath UTF8String];
-    NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
-    
-    init_0utput_file(videopath, pcmpath);
-    testPrint();
-    
-    start_play_video(mp4path,get_audio_data_fun,get_video_data_fun);
-}
-
-
-
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
 {
@@ -142,6 +113,7 @@ int get_video_data_fun(const void *video_frame_bytes) {
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    UIViewController *vc;
     NSString *title = self.muArray[indexPath.row];
     if ([title isEqualToString:@"解码音频，mp2转pcm"])
     {
@@ -156,7 +128,8 @@ int get_video_data_fun(const void *video_frame_bytes) {
         [self demuxing_decoding];
     }else if ([title isEqualToString:@"解码视频文件"])
     {
-        [self video_decoder];
+        vc = [[GlPlayerViewController alloc] init];
+        [self presentViewController:vc animated:YES completion:nil];
     }
     
     

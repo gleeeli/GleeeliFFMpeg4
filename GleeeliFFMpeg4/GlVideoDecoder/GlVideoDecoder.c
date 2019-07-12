@@ -29,6 +29,7 @@ static int video_stream_idx = -1, audio_stream_idx = -1;
 static AVFrame *frame = NULL;
 static AVPacket pkt;
 static int refcount = 0;//理解：控制多次引用内存，不用反复初始化AVFRame
+static void *targetObj = NULL;
 /*
  状态
  大于等于500的错是必须停止的，或需要重新初始化
@@ -40,8 +41,8 @@ static int refcount = 0;//理解：控制多次引用内存，不用反复初始
  */
 static int status = 0;
 
-static int (*get_audio_data_fun)(const void *audio_frame_bytes);
-static int (*get_video_data_fun)(const void *video_frame_bytes);
+static int (*get_audio_data_fun)(void *inRefCon,const void *audio_frame_bytes,unsigned long lenght);
+static int (*get_video_data_fun)(void *inRefCon,const void *video_frame_bytes,unsigned long lenght);
 
 
 void init_0utput_file(const char *out_yuv_path,const char *out_pcm_path) {
@@ -139,13 +140,21 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             
             //nb_samples:当前帧的音频采样个数？
             if (audio_pcm_file) {
+                unsigned long len = frame->nb_samples * dec_ctx->channels * data_size;
+                void *audio_frame_bytes = malloc(len);
+                unsigned long pos = 0;
                 //pcm数据写入本地文件
-                for (i = 0; i < frame->nb_samples; i++)
-                    for (ch = 0; ch < dec_ctx->channels; ch++)
-                        fwrite(frame->data[ch] + data_size*i, 1, data_size, audio_pcm_file);
-                
-                const void *audio_frame_bytes;
-                get_audio_data_fun(audio_frame_bytes);
+                for (i = 0; i < frame->nb_samples; i++){
+                    for (ch = 0; ch < dec_ctx->channels; ch++){
+//                        fwrite(frame->data[ch] + data_size*i, 1, data_size, audio_pcm_file);
+                        
+                        memcpy(audio_frame_bytes + pos, frame->data[ch] + data_size*i, data_size);
+                        pos += data_size;
+                    }
+                }
+                //发送数据到外部
+                get_audio_data_fun(targetObj,audio_frame_bytes,len);
+                free(audio_frame_bytes);
             }
             
         }
@@ -203,10 +212,19 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
-int start_play_video(const char *filePaht,int (*get_audio_data)(const void *audio_frame_bytes),int (*get_video_data)(const void *video_frame_bytes)) {
+int start_play_video(void *target,const char *filePaht,int (*get_audio_data)(void *inRefCon,const void *audio_frame_bytes,unsigned long lenght),int (*get_video_data)(void *inRefCon,const void *video_frame_bytes,unsigned long lenght)) {
     
+    targetObj = target;
     get_audio_data_fun = get_audio_data;
     get_video_data_fun = get_video_data;
+    
+//    const void *audio_frame_bytes = "124中";
+//    int len = strlen(audio_frame_bytes);
+//    printf("长度为：%d\n",len);
+//    get_audio_data_fun(target,audio_frame_bytes,len);
+//    get_video_data_fun(target,audio_frame_bytes,len);
+//
+//    return 0;
     
     int ret = 0;
     video_src_filePath = filePaht;

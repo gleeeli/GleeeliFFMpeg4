@@ -35,6 +35,7 @@
 		1910F27D22D8197600A42293 /* GlCommTools.c in Sources */ = {isa = PBXBuildFile; fileRef = 1910F27C22D8197600A42293 /* GlCommTools.c */; };
 		1910F28122D822E200A42293 /* GlVideoDecoder.c in Sources */ = {isa = PBXBuildFile; fileRef = 1910F27F22D822E200A42293 /* GlVideoDecoder.c */; };
 		1910F28622D877CF00A42293 /* GlAudioUnitManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 1910F28522D877CF00A42293 /* GlAudioUnitManager.m */; };
+		192277F622D897E600CA874E /* GlPlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 192277F522D897E600CA874E /* GlPlayerViewController.m */; };
 		1939EC9422C1B498008BF118 /* output.h264 in Resources */ = {isa = PBXBuildFile; fileRef = 1939EC9322C1B498008BF118 /* output.h264 */; };
 		1962859B22BCC31900C5EAB0 /* test3.mp2 in Resources */ = {isa = PBXBuildFile; fileRef = 1962859A22BCC31900C5EAB0 /* test3.mp2 */; };
 		19B7E58422C064BE00E60075 /* decode_video.c in Sources */ = {isa = PBXBuildFile; fileRef = 19B7E58322C064BE00E60075 /* decode_video.c */; };
@@ -194,6 +195,8 @@
 		1910F28022D822E200A42293 /* GlVideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoDecoder.h; sourceTree = "<group>"; };
 		1910F28422D877CF00A42293 /* GlAudioUnitManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlAudioUnitManager.h; sourceTree = "<group>"; };
 		1910F28522D877CF00A42293 /* GlAudioUnitManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GlAudioUnitManager.m; sourceTree = "<group>"; };
+		192277F422D897E600CA874E /* GlPlayerViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlPlayerViewController.h; sourceTree = "<group>"; };
+		192277F522D897E600CA874E /* GlPlayerViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GlPlayerViewController.m; sourceTree = "<group>"; };
 		1939EC9322C1B498008BF118 /* output.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = output.h264; sourceTree = "<group>"; };
 		1962859A22BCC31900C5EAB0 /* test3.mp2 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test3.mp2; sourceTree = "<group>"; };
 		19B7E58222C064BE00E60075 /* decode_video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = decode_video.h; sourceTree = "<group>"; };
@@ -520,10 +523,12 @@
 		1910F27E22D822E200A42293 /* GlVideoDecoder */ = {
 			isa = PBXGroup;
 			children = (
-				1910F27F22D822E200A42293 /* GlVideoDecoder.c */,
 				1910F28022D822E200A42293 /* GlVideoDecoder.h */,
+				1910F27F22D822E200A42293 /* GlVideoDecoder.c */,
 				1910F28422D877CF00A42293 /* GlAudioUnitManager.h */,
 				1910F28522D877CF00A42293 /* GlAudioUnitManager.m */,
+				192277F422D897E600CA874E /* GlPlayerViewController.h */,
+				192277F522D897E600CA874E /* GlPlayerViewController.m */,
 			);
 			path = GlVideoDecoder;
 			sourceTree = "<group>";
@@ -611,6 +616,7 @@
 				1910F28122D822E200A42293 /* GlVideoDecoder.c in Sources */,
 				19B7E58922C077F000E60075 /* demuxing_decoding.c in Sources */,
 				1910F27D22D8197600A42293 /* GlCommTools.c in Sources */,
+				192277F622D897E600CA874E /* GlPlayerViewController.m in Sources */,
 				1909DEC322BB2B4A00A2C24A /* ViewController.m in Sources */,
 				1909DECE22BB2B4B00A2C24A /* main.m in Sources */,
 				1909E02822BB7D5000A2C24A /* ResampleAudio.m in Sources */,
