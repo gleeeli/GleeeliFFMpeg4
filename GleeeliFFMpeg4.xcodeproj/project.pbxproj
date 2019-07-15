@@ -43,6 +43,17 @@
 		19B7E58922C077F000E60075 /* demuxing_decoding.c in Sources */ = {isa = PBXBuildFile; fileRef = 19B7E58822C077F000E60075 /* demuxing_decoding.c */; };
 		19B7E58B22C0B9CA00E60075 /* demuxing_video in Resources */ = {isa = PBXBuildFile; fileRef = 19B7E58A22C0B9CA00E60075 /* demuxing_video */; };
 		19B7E58D22C0BB3F00E60075 /* output_ss6_t10.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 19B7E58C22C0BB3F00E60075 /* output_ss6_t10.mp4 */; };
+		69DA8CE322D982C100D14398 /* GlVideoFrameView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CCE22D982BE00D14398 /* GlVideoFrameView.mm */; };
+		69DA8CE422D982C100D14398 /* gl_video_rgb_shaderf.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 69DA8CD022D982BF00D14398 /* gl_video_rgb_shaderf.fsh */; };
+		69DA8CE522D982C100D14398 /* gl_video_shaderv.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 69DA8CD122D982BF00D14398 /* gl_video_shaderv.vsh */; };
+		69DA8CE622D982C100D14398 /* gl_video_yuv_shaderf.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 69DA8CD222D982BF00D14398 /* gl_video_yuv_shaderf.fsh */; };
+		69DA8CE722D982C100D14398 /* GlRenderHandle.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CD522D982BF00D14398 /* GlRenderHandle.mm */; };
+		69DA8CE822D982C100D14398 /* GlRenderRGBHandle.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CD722D982BF00D14398 /* GlRenderRGBHandle.mm */; };
+		69DA8CE922D982C100D14398 /* GlRenderYUVHandle.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CD922D982BF00D14398 /* GlRenderYUVHandle.mm */; };
+		69DA8CEA22D982C100D14398 /* GlVideoFrameModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CDB22D982BF00D14398 /* GlVideoFrameModel.m */; };
+		69DA8CEB22D982C100D14398 /* GlVideoFrameRGBModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CDD22D982BF00D14398 /* GlVideoFrameRGBModel.m */; };
+		69DA8CEC22D982C100D14398 /* GlVideoFrameYUVModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CDF22D982BF00D14398 /* GlVideoFrameYUVModel.m */; };
+		69DA8CF022D9832600D14398 /* CommShader.mm in Sources */ = {isa = PBXBuildFile; fileRef = 69DA8CEE22D9832500D14398 /* CommShader.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -206,6 +217,25 @@
 		19B7E58822C077F000E60075 /* demuxing_decoding.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = demuxing_decoding.c; sourceTree = "<group>"; };
 		19B7E58A22C0B9CA00E60075 /* demuxing_video */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = demuxing_video; sourceTree = "<group>"; };
 		19B7E58C22C0BB3F00E60075 /* output_ss6_t10.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = output_ss6_t10.mp4; sourceTree = "<group>"; };
+		69DA8CCE22D982BE00D14398 /* GlVideoFrameView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GlVideoFrameView.mm; sourceTree = "<group>"; };
+		69DA8CD022D982BF00D14398 /* gl_video_rgb_shaderf.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gl_video_rgb_shaderf.fsh; sourceTree = "<group>"; };
+		69DA8CD122D982BF00D14398 /* gl_video_shaderv.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gl_video_shaderv.vsh; sourceTree = "<group>"; };
+		69DA8CD222D982BF00D14398 /* gl_video_yuv_shaderf.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; path = gl_video_yuv_shaderf.fsh; sourceTree = "<group>"; };
+		69DA8CD422D982BF00D14398 /* GlRenderHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlRenderHandle.h; sourceTree = "<group>"; };
+		69DA8CD522D982BF00D14398 /* GlRenderHandle.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GlRenderHandle.mm; sourceTree = "<group>"; };
+		69DA8CD622D982BF00D14398 /* GlRenderRGBHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlRenderRGBHandle.h; sourceTree = "<group>"; };
+		69DA8CD722D982BF00D14398 /* GlRenderRGBHandle.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GlRenderRGBHandle.mm; sourceTree = "<group>"; };
+		69DA8CD822D982BF00D14398 /* GlRenderYUVHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlRenderYUVHandle.h; sourceTree = "<group>"; };
+		69DA8CD922D982BF00D14398 /* GlRenderYUVHandle.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GlRenderYUVHandle.mm; sourceTree = "<group>"; };
+		69DA8CDA22D982BF00D14398 /* GlVideoFrameModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoFrameModel.h; sourceTree = "<group>"; };
+		69DA8CDB22D982BF00D14398 /* GlVideoFrameModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlVideoFrameModel.m; sourceTree = "<group>"; };
+		69DA8CDC22D982BF00D14398 /* GlVideoFrameRGBModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoFrameRGBModel.h; sourceTree = "<group>"; };
+		69DA8CDD22D982BF00D14398 /* GlVideoFrameRGBModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlVideoFrameRGBModel.m; sourceTree = "<group>"; };
+		69DA8CDE22D982BF00D14398 /* GlVideoFrameYUVModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoFrameYUVModel.h; sourceTree = "<group>"; };
+		69DA8CDF22D982BF00D14398 /* GlVideoFrameYUVModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlVideoFrameYUVModel.m; sourceTree = "<group>"; };
+		69DA8CE122D982C000D14398 /* GlVideoFrameView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlVideoFrameView.h; sourceTree = "<group>"; };
+		69DA8CEE22D9832500D14398 /* CommShader.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = CommShader.mm; sourceTree = "<group>"; };
+		69DA8CEF22D9832600D14398 /* CommShader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CommShader.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -251,7 +281,10 @@
 		1909DEBD22BB2B4A00A2C24A /* GleeeliFFMpeg4 */ = {
 			isa = PBXGroup;
 			children = (
-				1910F27E22D822E200A42293 /* GlVideoDecoder */,
+				69DA8CF122D98C8800D14398 /* Vendor */,
+				69DA8CCC22D9826100D14398 /* GlVideo */,
+				192277F422D897E600CA874E /* GlPlayerViewController.h */,
+				192277F522D897E600CA874E /* GlPlayerViewController.m */,
 				1909E01622BB329200A2C24A /* Examples */,
 				1909E01422BB2F7B00A2C24A /* Comm */,
 				1909DEBE22BB2B4A00A2C24A /* AppDelegate.h */,
@@ -498,6 +531,8 @@
 		1909E01422BB2F7B00A2C24A /* Comm */ = {
 			isa = PBXGroup;
 			children = (
+				69DA8CEF22D9832600D14398 /* CommShader.h */,
+				69DA8CEE22D9832500D14398 /* CommShader.mm */,
 				1909E01522BB2F8C00A2C24A /* CommHeader.h */,
 				1910F27B22D8197600A42293 /* GlCommTools.h */,
 				1910F27C22D8197600A42293 /* GlCommTools.c */,
@@ -527,10 +562,64 @@
 				1910F27F22D822E200A42293 /* GlVideoDecoder.c */,
 				1910F28422D877CF00A42293 /* GlAudioUnitManager.h */,
 				1910F28522D877CF00A42293 /* GlAudioUnitManager.m */,
-				192277F422D897E600CA874E /* GlPlayerViewController.h */,
-				192277F522D897E600CA874E /* GlPlayerViewController.m */,
 			);
 			path = GlVideoDecoder;
+			sourceTree = "<group>";
+		};
+		69DA8CCC22D9826100D14398 /* GlVideo */ = {
+			isa = PBXGroup;
+			children = (
+				1910F27E22D822E200A42293 /* GlVideoDecoder */,
+				69DA8CCD22D9828D00D14398 /* GlVideoScreen */,
+			);
+			path = GlVideo;
+			sourceTree = "<group>";
+		};
+		69DA8CCD22D9828D00D14398 /* GlVideoScreen */ = {
+			isa = PBXGroup;
+			children = (
+				69DA8CE122D982C000D14398 /* GlVideoFrameView.h */,
+				69DA8CCE22D982BE00D14398 /* GlVideoFrameView.mm */,
+				69DA8CD322D982BF00D14398 /* Model */,
+				69DA8CCF22D982BF00D14398 /* Shader */,
+			);
+			path = GlVideoScreen;
+			sourceTree = "<group>";
+		};
+		69DA8CCF22D982BF00D14398 /* Shader */ = {
+			isa = PBXGroup;
+			children = (
+				69DA8CD022D982BF00D14398 /* gl_video_rgb_shaderf.fsh */,
+				69DA8CD122D982BF00D14398 /* gl_video_shaderv.vsh */,
+				69DA8CD222D982BF00D14398 /* gl_video_yuv_shaderf.fsh */,
+			);
+			path = Shader;
+			sourceTree = "<group>";
+		};
+		69DA8CD322D982BF00D14398 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				69DA8CD422D982BF00D14398 /* GlRenderHandle.h */,
+				69DA8CD522D982BF00D14398 /* GlRenderHandle.mm */,
+				69DA8CD622D982BF00D14398 /* GlRenderRGBHandle.h */,
+				69DA8CD722D982BF00D14398 /* GlRenderRGBHandle.mm */,
+				69DA8CD822D982BF00D14398 /* GlRenderYUVHandle.h */,
+				69DA8CD922D982BF00D14398 /* GlRenderYUVHandle.mm */,
+				69DA8CDA22D982BF00D14398 /* GlVideoFrameModel.h */,
+				69DA8CDB22D982BF00D14398 /* GlVideoFrameModel.m */,
+				69DA8CDC22D982BF00D14398 /* GlVideoFrameRGBModel.h */,
+				69DA8CDD22D982BF00D14398 /* GlVideoFrameRGBModel.m */,
+				69DA8CDE22D982BF00D14398 /* GlVideoFrameYUVModel.h */,
+				69DA8CDF22D982BF00D14398 /* GlVideoFrameYUVModel.m */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		69DA8CF122D98C8800D14398 /* Vendor */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Vendor;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -590,6 +679,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69DA8CE422D982C100D14398 /* gl_video_rgb_shaderf.fsh in Resources */,
 				1909DECB22BB2B4B00A2C24A /* LaunchScreen.storyboard in Resources */,
 				1909DEC822BB2B4B00A2C24A /* Assets.xcassets in Resources */,
 				19B7E58B22C0B9CA00E60075 /* demuxing_video in Resources */,
@@ -602,7 +692,9 @@
 				1909E01122BB2F3200A2C24A /* test.mp3 in Resources */,
 				1909DEC622BB2B4A00A2C24A /* Main.storyboard in Resources */,
 				1909E01B22BB55DE00A2C24A /* test2.mp3 in Resources */,
+				69DA8CE522D982C100D14398 /* gl_video_shaderv.vsh in Resources */,
 				1962859B22BCC31900C5EAB0 /* test3.mp2 in Resources */,
+				69DA8CE622D982C100D14398 /* gl_video_yuv_shaderf.fsh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -615,15 +707,23 @@
 			files = (
 				1910F28122D822E200A42293 /* GlVideoDecoder.c in Sources */,
 				19B7E58922C077F000E60075 /* demuxing_decoding.c in Sources */,
+				69DA8CEB22D982C100D14398 /* GlVideoFrameRGBModel.m in Sources */,
 				1910F27D22D8197600A42293 /* GlCommTools.c in Sources */,
 				192277F622D897E600CA874E /* GlPlayerViewController.m in Sources */,
+				69DA8CEA22D982C100D14398 /* GlVideoFrameModel.m in Sources */,
 				1909DEC322BB2B4A00A2C24A /* ViewController.m in Sources */,
 				1909DECE22BB2B4B00A2C24A /* main.m in Sources */,
 				1909E02822BB7D5000A2C24A /* ResampleAudio.m in Sources */,
+				69DA8CE922D982C100D14398 /* GlRenderYUVHandle.mm in Sources */,
 				19B7E58422C064BE00E60075 /* decode_video.c in Sources */,
+				69DA8CF022D9832600D14398 /* CommShader.mm in Sources */,
+				69DA8CEC22D982C100D14398 /* GlVideoFrameYUVModel.m in Sources */,
+				69DA8CE722D982C100D14398 /* GlRenderHandle.mm in Sources */,
 				1910F28622D877CF00A42293 /* GlAudioUnitManager.m in Sources */,
 				1909E01922BB32EC00A2C24A /* decode_audio_4.c in Sources */,
 				1909DEC022BB2B4A00A2C24A /* AppDelegate.m in Sources */,
+				69DA8CE822D982C100D14398 /* GlRenderRGBHandle.mm in Sources */,
+				69DA8CE322D982C100D14398 /* GlVideoFrameView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -766,7 +866,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**",
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3/**",
+				);
 				INFOPLIST_FILE = GleeeliFFMpeg4/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -788,7 +891,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**",
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3/**",
+				);
 				INFOPLIST_FILE = GleeeliFFMpeg4/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = (

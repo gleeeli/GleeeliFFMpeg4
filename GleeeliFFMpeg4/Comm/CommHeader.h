@@ -20,4 +20,9 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AudioToolbox/AudioToolbox.h>
 
+//！屏幕宽度
+#define SCREEN_WIDTH  [[UIScreen mainScreen] bounds].size.width
+//！屏幕高度
+#define SCREEN_HEIGHT [[UIScreen mainScreen] bounds].size.height
+
 #endif /* CommHeader_h */

@@ -2,7 +2,7 @@
 //  decode_video.c
 //  GleeeliFFMpeg4
 //
-//  Created by 小柠檬 on 2019/6/24.
+//  Created by gleeeli on 2019/6/24.
 //  Copyright © 2019 gleeeli. All rights reserved.
 //
 
