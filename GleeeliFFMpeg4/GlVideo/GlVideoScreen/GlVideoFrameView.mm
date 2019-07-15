@@ -16,6 +16,8 @@
 @interface GlVideoFrameView()
 @property (nonatomic, strong) CommShader *shader;
 @property (nonatomic, strong) GlRenderHandle *renderHandle;
+@property (atomic, strong) NSMutableArray<GlVideoFrameModel *> *queueArray;
+@property (nonatomic, assign) NSInteger threadStatus;
 @end
 
 @implementation GlVideoFrameView
@@ -39,8 +41,10 @@
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
+        self.queueArray = [[NSMutableArray alloc] init];
         [self setupLayer];
         [self setupContext];
+        [self initThread];
         
     }
     return self;
@@ -261,4 +265,54 @@
     [context presentRenderbuffer:GL_RENDERBUFFER];
 }
 
+/**
+ 往缓冲数组增加帧
+ */
+- (void)addFrame:(GlVideoFrameModel *)model {
+    [self.queueArray addObject:model];
+    NSLog(@"添加picture:%ld",[self.queueArray count]);
+}
+
+#pragma mark 处理线程
+- (void)initThread {
+    _threadStatus = 1;
+    _mainClockTime = 0;
+    _mainDuration = 0;
+    
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(0,0), ^{
+        while (weakSelf.threadStatus) {
+            if ([weakSelf.queueArray count] > 0) {
+                GlVideoFrameModel *model = [weakSelf.queueArray firstObject];
+                
+                
+                if ((model.time + model.duration) < weakSelf.mainClockTime) {//显示时间已过
+                    [weakSelf.queueArray removeObjectAtIndex:0];//丢弃
+                    NSLog(@"***同步异常-丢弃:%f",(weakSelf.mainClockTime - (model.time + model.duration)));
+                }else if((model.time > (weakSelf.mainClockTime + weakSelf.mainDuration)) && (weakSelf.mainClockTime > 0)) {//显示时间未到，延迟显示
+                    NSTimeInterval sleepTime = model.time - weakSelf.mainClockTime;
+                    [NSThread sleepForTimeInterval:sleepTime];
+                    NSLog(@"***同步异常-显示时间未到");
+                }else {//正常显示
+                    NSLog(@"***正常显示");
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        //主线程更新视图
+                        [weakSelf updateFrameTexture:model];
+                    });
+                    [NSThread sleepForTimeInterval:model.duration];
+                    [weakSelf.queueArray removeObjectAtIndex:0];
+                }
+                
+                
+            }else {
+                [NSThread sleepForTimeInterval:0.01];
+            }
+        }
+    });
+}
+
+- (void)dealloc {
+    [_queueArray removeAllObjects];
+    _threadStatus = 0;
+}
 @end

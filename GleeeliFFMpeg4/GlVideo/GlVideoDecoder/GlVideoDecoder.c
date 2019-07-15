@@ -12,32 +12,35 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
 #include "GlCommTools.h"
+#include<stdio.h>
 #include <pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
 
 static AVFormatContext *fmt_ctx = NULL;
 static AVCodecContext *video_dec_ctx = NULL, *audio_dec_ctx;
-//static int width, height;
-//static enum AVPixelFormat pix_fmt;//像素格式
 static AVStream *video_stream = NULL, *audio_stream = NULL;
 static const char *video_src_filePath = NULL;//视频源文件路径
 static const char *video_yuv_filePath = NULL;
-static const char *video_yuv_filePath1 = NULL;
-static const char *audio_pcm_filePath = NULL;
+static const char *audio_pcm_filePath;
 static FILE *audio_pcm_file = NULL;
-//static uint8_t *video_dst_data[4] = {NULL};
-//static int      video_dst_linesize[4];
-//static int video_dst_bufsize;
 static int video_stream_idx = -1, audio_stream_idx = -1;
 static AVFrame *frame = NULL;
 static AVPacket pkt;
 static int refcount = 0;//理解：控制多次引用内存，不用反复初始化AVFRame
 static void *targetObj = NULL;
 static pthread_t th_read_frame;
+
+pthread_mutex_t mut; //互斥锁类型
+
 /*
  状态
  大于等于500的错是必须停止的，或需要重新初始化
  -1为出错
  0:未开始
+ 1:初始化
+ 2：初始化完成，正在解码
+ 200:解码完成
  -500:发送packet错误
  -501:接收frame出错
  -502:获取音频帧采样大小时出错
@@ -46,26 +49,32 @@ static int status = 0;
 
 //static int (*get_audio_data_fun)(void *inRefCon,const void *audio_frame_bytes,unsigned long lenght);
 //static int (*get_video_data_fun)(void *inRefCon,const void *video_frame_bytes,unsigned long lenght);
-static GADType get_audio_data_fun;
-static GVDType get_video_data_fun;
+static GADFType get_audio_data_fun;
+static GVDFType get_video_data_fun;
+static GlSCFType status_change_notification_fun;
 
-void init_0utput_file(const char *out_yuv_path,const char *out_pcm_path) {
-//    video_yuv_filePath = "123456789";
-    
-    video_yuv_filePath = "55556666";
-    video_yuv_filePath1 = out_yuv_path;
-    
-//    video_yuv_filePath = out_yuv_path;
-    audio_pcm_filePath = out_pcm_path;
-    
-    audio_pcm_file = fopen(out_pcm_path, "wb");
-    if (!audio_pcm_file) {
-        status = 400;
+/**
+ 返回当前解码状态
+ */
+int gl_get_cur_status(void) {
+    return status;
+}
+
+void gl_set_status(int now_status) {
+    status = now_status;
+    //通知状态改变
+    if (status_change_notification_fun) {
+        status_change_notification_fun(targetObj,status);
     }
 }
 
-void testPrint() {
-    printf("video:%s,\naudio:%s\n",video_yuv_filePath,audio_pcm_filePath);
+/**
+ 注册需要的通知函数
+
+ @param status_change_notification 状态改变通知
+ */
+void gl_register_funs(GlSCFType status_change_notification) {
+    status_change_notification_fun = status_change_notification;
 }
 
 /**
@@ -95,7 +104,7 @@ static void write_yuv_to_buffer(void *video_frame_bytes,unsigned long *pos, unsi
  @param xsize 宽
  @param ysize 高
  */
-static void create_yuv_frame_buffer(uint8_t *data[], int linesize[], int xsize, int ysize)
+static void create_yuv_frame_buffer(uint8_t *data[], int linesize[], int xsize, int ysize,struct gl_frame_type frame_info)
 {
     unsigned long len = xsize * ysize * 3/2;
     void *video_frame_bytes = malloc(len);
@@ -104,9 +113,9 @@ static void create_yuv_frame_buffer(uint8_t *data[], int linesize[], int xsize, 
     write_yuv_to_buffer(video_frame_bytes,&pos,data[0], linesize[0], xsize, ysize);
     write_yuv_to_buffer(video_frame_bytes,&pos,data[1], linesize[1], xsize/2, ysize/2);
     write_yuv_to_buffer(video_frame_bytes,&pos,data[2], linesize[2], xsize/2, ysize/2);
-    
+
     //发送数据到外部
-    get_video_data_fun(targetObj,video_frame_bytes,len);
+    get_video_data_fun(targetObj,video_frame_bytes,len,frame_info);
     free(video_frame_bytes);
 }
 
@@ -134,10 +143,11 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
     int ret;
     ret = avcodec_send_packet(dec_ctx, pkt);
     if (ret < 0) {
-        status = -500;
+        gl_set_status(-500);
         fprintf(stderr, "Error sending a packet for decoding\n");
         return;
     }
+    
     while (ret >= 0) {
         //获取一帧
         ret = avcodec_receive_frame(dec_ctx, frame);
@@ -145,7 +155,7 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             return;
         else if (ret < 0) {
             fprintf(stderr, "Error during decoding\n");
-            status = -501;
+            gl_set_status(-501);
             return;
         }
         
@@ -163,8 +173,14 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
 //                snprintf(filename, sizeof(filename), "%s/%d-%s", folderPaht, dec_ctx->frame_number, fileName);
                 //yuv_save(frame->data, frame->linesize, frame->width, frame->height, filename);
                 
+                float time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+                float duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+                struct gl_frame_type frame_info;
+                frame_info.time = time;
+                frame_info.duration = duration;
+                
                 //将一帧完整yuv写入内存，并发送出去
-                create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height);
+                create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);
             }
             
         }else if(pkt->stream_index == audio_stream_idx){//处理音频PCM
@@ -175,7 +191,7 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             //获取每个采样的大小
             data_size = av_get_bytes_per_sample(dec_ctx->sample_fmt);
             if (data_size < 0) {
-                status = -502;
+                gl_set_status(-502);
                 fprintf(stderr, "Failed to calculate data size\n");
                 return;
             }
@@ -196,8 +212,17 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
                         pos += data_size;
                     }
                 }
+                
+                
+                float time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+                float duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+                printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
+                struct gl_frame_type frame_info;
+                frame_info.time = time;
+                frame_info.duration = duration;
                 //发送数据到外部
-                get_audio_data_fun(targetObj,audio_frame_bytes,len);
+                get_audio_data_fun(targetObj,audio_frame_bytes,len,frame_info);
+                
                 free(audio_frame_bytes);
             }
             
@@ -256,10 +281,13 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
+
+
 /**
  解码结束
  */
 void decoder_end_exit(void) {
+    printf("*******释放解码内存*******");
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
     avformat_close_input(&fmt_ctx);
@@ -270,13 +298,12 @@ void decoder_end_exit(void) {
 }
 
 void read_frame_function( void *ptr ) {
-    printf("enter thread%s",ptr);
+    pthread_mutex_lock(&mut); //加锁，用于对共享变量操作
+    printf("enter thread%s，ID:%u\n",ptr,(unsigned int)th_read_frame);
     
     //获取每帧数据包（pkt），此时每个包可能还包含着多个帧
     while (av_read_frame(fmt_ctx, &pkt) >= 0) {
-        //单位秒
-        float delay = 0.001;
-        av_usleep(delay *1000 * 1000);
+
         if(pkt.stream_index == video_stream_idx){
             decode_packet(video_dec_ctx,frame,&pkt);
         }else if(pkt.stream_index == audio_stream_idx){
@@ -289,19 +316,30 @@ void read_frame_function( void *ptr ) {
             decoder_end_exit();
             break;
         }
+        
+        //单位秒
+//        float delay = 0.001;
+        //此处av_usleep或者usleep会导致video_yuv_filePath值变成乱码，暂时不知原因
+//        av_usleep(delay *1000000.0 + 6000);
+        //usleep(delay *1000 * 1000);
     }
-    
+    //解码完成
+    gl_set_status(200);
+    decoder_end_exit();
+    pthread_mutex_unlock(&mut); //解锁
     pthread_exit("decoder thread exit");
 }
 
-int start_play_video(void *target,const char *filePaht,GADType get_audio_data,GVDType get_video_data) {
-    
+int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,GVDFType get_video_data) {
+    gl_set_status(1);
     targetObj = target;
     get_audio_data_fun = get_audio_data;
     get_video_data_fun = get_video_data;
     
     int ret = 0;
     video_src_filePath = filePaht;
+    
+    printf("测试地址指针赋值完成：\n视频:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_filePath,&audio_pcm_filePath,&video_src_filePath);
     //打开文件 初始化格式上下文
     if (avformat_open_input(&fmt_ctx, video_src_filePath, NULL, NULL) < 0) {
         fprintf(stderr, "Could not open source file %s\n", video_src_filePath);
@@ -338,7 +376,10 @@ int start_play_video(void *target,const char *filePaht,GADType get_audio_data,GV
     pkt.data = NULL;
     pkt.size = 0;
     
-    
+    gl_set_status(2);
+    //处理线程
+    //用默认属性初始化互斥锁
+    pthread_mutex_init(&mut,NULL);
     char *message = "thread1---read frame";
     int ret_th;
     ret_th = pthread_create(&th_read_frame, NULL, (void *)&read_frame_function, (void *) message);
@@ -352,4 +393,16 @@ int start_play_video(void *target,const char *filePaht,GADType get_audio_data,GV
     return ret < 0;
 }
 
+
+int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht,GADFType get_audio_data,GVDFType get_video_data) {
+    
+    video_yuv_filePath = yuvfilePath;
+    audio_pcm_filePath = pcmfilePaht;
+    
+    audio_pcm_file = fopen(pcmfilePaht, "wb");
+    if (!audio_pcm_file) {
+        gl_set_status(400);
+    }
+    return start_play_video(target, videofilePaht, get_audio_data, get_video_data);
+}
 

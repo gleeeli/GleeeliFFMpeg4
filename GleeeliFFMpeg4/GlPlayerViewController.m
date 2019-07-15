@@ -17,7 +17,7 @@
 #define YUV_Width 720
 #define YUV_Height 480
 
-@interface GlPlayerViewController ()
+@interface GlPlayerViewController ()<GlPlayeAudioDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
 @property (nonatomic, strong) GlVideoFrameView *glView;
 @end
@@ -42,6 +42,7 @@
     self.audioManager.channel = 2;
     self.audioManager.mBitsPerChannel = 32;
     self.audioManager.formatFlags = @"float32";
+    self.audioManager.delegate = self;
     
     [self.audioManager play];
 }
@@ -58,31 +59,44 @@
     self.glView = [[GlVideoFrameView alloc] initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, glheight)];
     [self.view addSubview:self.glView];
     
-    //decode_video720x480YUV420P
-    NSString *inputFilePath = [[NSBundle mainBundle] pathForResource:@"176x144_yuv420p" ofType:@"yuv"];
-    const char *yuvFilePath = [inputFilePath UTF8String];
+    //测试直接显示用的文件： decode_video720x480YUV420P
+//    NSString *inputFilePath = [[NSBundle mainBundle] pathForResource:@"176x144_yuv420p" ofType:@"yuv"];
+//    const char *yuvFilePath = [inputFilePath UTF8String];
 //    unsigned char *buffer = readYUV(yuvFilePath);
 }
 
-int get_audio_data_fun(void *inRefCon, const void *audio_frame_bytes,unsigned long length) {
+#pragma mark 解码通知
+//状态改变通知
+void gl_status_chang_notification(void *inRefCon,int status) {
+    printf("状态改变通知:%d",status);
+    GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
+    vc.audioManager.decoderStatus = status;
+}
+
+//音频解码获得数据
+int get_audio_data_fun(void *inRefCon, const void *audio_frame_bytes,unsigned long length,struct gl_frame_type frame_info) {
     
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
 //    printf("得到音频数据：%s\n",audio_frame_bytes);
     NSData *data = [[NSData alloc] initWithBytes:audio_frame_bytes length:length];
+    GlAudioFrameModel *model = [[GlAudioFrameModel alloc] init];
+    model.time = frame_info.time;
+    model.duration = frame_info.duration;
+    model.data = data;
     
-    [vc.audioManager.queueArray addObject:data];
+    [vc.audioManager.queueArray addObject:model];
 //    NSString * str  =[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 //    NSLog(@"str:%@",str);
     return 0;
 }
 
-int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned long length) {
+int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned long length,struct gl_frame_type frame_info) {
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
-    [vc createYUVFrameData:video_frame_bytes length:length];
+    [vc createYUVFrameData:video_frame_bytes length:length frameInfo:frame_info];
     return 0;
 }
 
-- (void)createYUVFrameData:(const void *)buffer length:(unsigned long)length{
+- (void)createYUVFrameData:(const void *)buffer length:(unsigned long)length frameInfo:(struct gl_frame_type)frameInfo{
     NSUInteger ylenght = length*2/3;
     
     NSData *dataY = [NSData dataWithBytes:buffer length:ylenght];
@@ -92,14 +106,14 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     GlVideoFrameYUVModel *fmodel = [[GlVideoFrameYUVModel alloc] init];
     fmodel.width = YUV_Width;
     fmodel.height = YUV_Height;
+    fmodel.time = frameInfo.time;
+    fmodel.duration = frameInfo.duration;
     
     fmodel.lumaY = dataY;
     fmodel.chrominanceU = dataU;
     fmodel.chromaV = dataV;
     
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.glView updateFrameTexture:fmodel];
-    });
+    [self.glView addFrame:fmodel];
     
 }
 
@@ -114,33 +128,32 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     NSString *videofilePath = [kPathDocument stringByAppendingPathComponent:@"movie_video.yuv"];
     const char *video_yuv_path = [videofilePath UTF8String];
     
-    unsigned long len = strlen(video_yuv_path)+1;
-    char* buf = (char*)malloc(sizeof(char) * len);
-    strcpy(buf, video_yuv_path);
-    
-    const char *video_yuv_path1 = buf;
+//    unsigned long len = strlen(video_yuv_path)+1;
+//    char* buf = (char*)malloc(sizeof(char) * len);
+//    strcpy(buf, video_yuv_path);
+//
+//    const char *video_yuv_path1 = buf;
 
     NSLog(@"解封装后的video_yuv文件路径：%@",videofilePath);
     
     
     NSString *pcmfilePath = [kPathDocument stringByAppendingPathComponent:@"movie_audioPcm.pcm"];
-    const char *pcm1path = [pcmfilePath UTF8String];
+    const char *pcmpath = [pcmfilePath UTF8String];
     NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
     
-    init_0utput_file(video_yuv_path1, pcm1path);
-    testPrint();
+    printf("测试地址指针开始前：\nvideo_yuv_filePath:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_path,&pcmpath,&mp4path);
     
-    start_play_video((__bridge void *)(self), mp4path, get_audio_data_fun, get_video_data_fun);
+    gl_register_funs(gl_status_chang_notification);
+    
+//    start_play_video((__bridge void *)(self), mp4path, get_audio_data_fun, get_video_data_fun);
+    start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath, get_audio_data_fun, get_video_data_fun);
 }
 
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+#pragma mark <GlPlayeAudioDelegate>
+- (void)curPlayModel:(GlAudioFrameModel *)fmodel {
+    NSLog(@"通知主时钟：%f",fmodel.time);
+    self.glView.mainClockTime = fmodel.time;
+    self.glView.mainDuration = fmodel.duration;
 }
-*/
 
 @end

@@ -7,10 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "GlAudioFrameModel.h"
 
 @protocol GlPlayeAudioDelegate <NSObject>
-
+@optional
 - (void)playEnd;
+- (void)curPlayModel:(GlAudioFrameModel *)fmodel;
 
 @end
 
@@ -25,7 +27,8 @@
 @property (nonatomic, assign) BOOL isBigEndian;//是否大端  高字节在低地址, 低字节在高地址
 
 @property (nonatomic, weak) id<GlPlayeAudioDelegate> delegate;
-@property (nonatomic, strong) NSMutableArray *queueArray;
+@property (nonatomic, strong) NSMutableArray<GlAudioFrameModel *> *queueArray;
+@property (atomic, assign) int decoderStatus;//解码状态
 
 - (void)play;
 @end

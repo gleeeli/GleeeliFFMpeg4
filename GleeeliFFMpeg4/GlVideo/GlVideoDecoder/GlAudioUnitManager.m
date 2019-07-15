@@ -18,7 +18,7 @@
     AudioUnit audioUnit;
     FILE *f, *outfile;
     BOOL iswrite;
-    NSData *curData;
+    GlAudioFrameModel *curModel;//当前正在读取的帧数据
     unsigned long curpos;
 }
 
@@ -201,9 +201,12 @@ static OSStatus PlayCallback(void *inRefCon,
 
 
 - (void)writerIodata:(AudioBufferList *)ioData num:(UInt32) inNumberFrames{
-    if (curData == nil) {
-        curData = [self.queueArray firstObject];
+    if (curModel == nil) {
+        curModel = [self.queueArray firstObject];
         curpos = 0;
+        if (self.delegate && [self.delegate respondsToSelector:@selector(curPlayModel:)]) {
+            [self.delegate curPlayModel:curModel];
+        }
     }
     
     UInt32 *frameBuffer = ioData->mBuffers[0].mData;
@@ -211,8 +214,8 @@ static OSStatus PlayCallback(void *inRefCon,
         memset(ioData->mBuffers[i].mData, 0, ioData->mBuffers[i].mDataByteSize);
     }
     
-    const void *bytes = (Byte *)curData.bytes + curpos;
-    const NSUInteger bytesLeft = (curData.length - curpos);
+    const void *bytes = (Byte *)curModel.data.bytes + curpos;
+    const NSUInteger bytesLeft = (curModel.data.length - curpos);
     const NSUInteger frameSizeOf = self.channel * sizeof(float);
     const NSUInteger bytesToCopy = MIN(inNumberFrames * frameSizeOf, bytesLeft);
     const NSUInteger framesToCopy = bytesToCopy / frameSizeOf;
@@ -226,9 +229,12 @@ static OSStatus PlayCallback(void *inRefCon,
     if (bytesToCopy < bytesLeft)
         curpos += bytesToCopy;
     else {
-        curData = nil;
+        curModel = nil;
         [self.queueArray removeObjectAtIndex:0];
-        
+        //解码完成且没有需要播放的数据则停止
+        if ([self.queueArray count] == 0 && self.decoderStatus == 200) {
+            [self stop];
+        }
     }
     
     //[player writerData:data];

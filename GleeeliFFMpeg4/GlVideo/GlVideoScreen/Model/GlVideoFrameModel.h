@@ -11,4 +11,6 @@
 @interface GlVideoFrameModel : NSObject
 @property (nonatomic) NSUInteger width;//帧图片的宽
 @property (nonatomic) NSUInteger height;
+@property (nonatomic, assign) float time;//当前帧的显示时间
+@property (nonatomic, assign) float duration;//持续时间
 @end
