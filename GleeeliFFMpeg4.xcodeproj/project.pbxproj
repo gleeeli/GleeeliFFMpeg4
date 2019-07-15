@@ -868,7 +868,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**",
-					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3/**",
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3",
 				);
 				INFOPLIST_FILE = GleeeliFFMpeg4/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
@@ -893,7 +893,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/GleeeliFFMpeg4/FFmpeg4.1-iOS/include/**",
-					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3/**",
+					"$(PROJECT_DIR)/GleeeliFFMpeg4/Vendor/include/glm0.9.9.3",
 				);
 				INFOPLIST_FILE = GleeeliFFMpeg4/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
