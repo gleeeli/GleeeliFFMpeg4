@@ -39,11 +39,11 @@ int gl_get_cur_status(void);
  
  @param status_change_notification 状态改变通知
  */
-void gl_register_funs(GlSCFType status_change_notification,GlGFIFun get_format_info);
+void gl_register_funs(GADFType get_audio_data,GVDFType get_video_data,GlSCFType status_change_notification,GlGFIFun get_format_info);
 
-int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,GVDFType get_video_data);
+int start_play_video(void *target,const char *videofilePaht);
 
-int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht,GADFType get_audio_data,GVDFType get_video_data);
+int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht);
 
 //暂停
 void gl_pause_decoder(void);

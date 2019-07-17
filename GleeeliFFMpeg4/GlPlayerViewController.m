@@ -169,10 +169,10 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
     printf("测试地址指针开始前：\nvideo_yuv_filePath:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_path,&pcmpath,&mp4path);
     
-    gl_register_funs(gl_status_chang_notification,gl_get_format_info_fun);
+    gl_register_funs(get_audio_data_fun, get_video_data_fun,gl_status_chang_notification,gl_get_format_info_fun);
     
-//    start_play_video((__bridge void *)(self), mp4path, get_audio_data_fun, get_video_data_fun);
-    start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath, get_audio_data_fun, get_video_data_fun);
+    start_play_video((__bridge void *)(self), mp4path);
+//    start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath);
     
     [self.glView startShowFrame];
 }

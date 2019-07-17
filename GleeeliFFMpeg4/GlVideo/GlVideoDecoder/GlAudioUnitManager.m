@@ -16,7 +16,7 @@
 @implementation GlAudioUnitManager
 {
     AudioUnit audioUnit;
-    FILE *f, *outfile;
+//    FILE *f, *outfile;
     BOOL iswrite;
     GlAudioFrameModel *curModel;//当前正在读取的帧数据
     unsigned long curpos;
@@ -32,15 +32,15 @@
         self.isBigEndian = NO;
         self.queueArray = [[NSMutableArray alloc] init];
         
-        NSString *pcmfilePath = [kPathDocument stringByAppendingPathComponent:@"audioPcm.pcm"];
-        const char *pcmpath = [pcmfilePath UTF8String];
-        NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
+        //测试
+//        NSString *pcmfilePath = [kPathDocument stringByAppendingPathComponent:@"audioPcm.pcm"];
+//        const char *pcmpath = [pcmfilePath UTF8String];
+//        NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
 
-
-        outfile = fopen(pcmpath, "wb");
-        if (!outfile) {
-            exit(1);
-        }
+//        outfile = fopen(pcmpath, "wb");
+//        if (!outfile) {
+//            exit(1);
+//        }
         
     }
     
@@ -190,11 +190,6 @@ static OSStatus PlayCallback(void *inRefCon,
         
     }
     
-//    if (ioData->mBuffers[0].mDataByteSize <= 0) {
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            [player stop];
-//        });
-//    }
     return noErr;
 }
 
@@ -240,19 +235,6 @@ static OSStatus PlayCallback(void *inRefCon,
         }
     }
     
-    //[player writerData:data];
-    
-    
-    /*
-    if (data == nil) {
-        //fclose(outfile);
-        return;
-    }
-     */
-    //iswrite = YES;
-    //printf("leng:%d",data.length);
-    //fwrite(data.bytes, 1, data.length, outfile);
-    
 }
 
 - (void)stop {
@@ -267,13 +249,12 @@ static OSStatus PlayCallback(void *inRefCon,
 }
 
 - (void)dealloc {
-    fclose(outfile);
+//    fclose(outfile);
     AudioOutputUnitStop(audioUnit);
     AudioUnitUninitialize(audioUnit);
     AudioComponentInstanceDispose(audioUnit);
     [self clearCache];
 }
-
 
 - (void)printAudioStreamBasicDescription:(AudioStreamBasicDescription)asbd {
     char formatID[5];

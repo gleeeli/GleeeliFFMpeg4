@@ -76,9 +76,11 @@ void gl_set_status(int now_status) {
 
  @param status_change_notification 状态改变通知
  */
-void gl_register_funs(GlSCFType status_change_notification,GlGFIFun get_format_info){
+void gl_register_funs(GADFType get_audio_data,GVDFType get_video_data,GlSCFType status_change_notification,GlGFIFun get_format_info){
     status_change_notification_fun = status_change_notification;
     get_format_info_fun = get_format_info;
+    get_audio_data_fun = get_audio_data;
+    get_video_data_fun = get_video_data;
 }
 
 
@@ -170,23 +172,23 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             printf("widht:%d,height:%d\n",frame->width,frame->height);
             fflush(stdout);
             
+            double time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+            double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+            struct gl_frame_type frame_info;
+            frame_info.time = time;
+            frame_info.duration = duration;
+            
+            //将一帧完整yuv写入内存，并发送出去
+            create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);
+            
             if (video_yuv_filePath) {//需要保存到本地
-//                char filename[1024];
-//                char *fileName = get_filename(video_yuv_filePath);
-//                char *folderPaht = get_folder_path(video_yuv_filePath);
+                char filename[1024];
+                char *fileName = get_filename((char *)video_yuv_filePath);
+                char *folderPaht = get_folder_path((char *)video_yuv_filePath);
                 
                 //格式化字符串到buf中，也就是输出文件后部拼接帧序号
-//                snprintf(filename, sizeof(filename), "%s/%d-%s", folderPaht, dec_ctx->frame_number, fileName);
-                //yuv_save(frame->data, frame->linesize, frame->width, frame->height, filename);
-                
-                double time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
-                double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
-                struct gl_frame_type frame_info;
-                frame_info.time = time;
-                frame_info.duration = duration;
-                
-                //将一帧完整yuv写入内存，并发送出去
-                create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);
+                snprintf(filename, sizeof(filename), "%s/%d-%s", folderPaht, dec_ctx->frame_number, fileName);
+                yuv_save(frame->data, frame->linesize, frame->width, frame->height, filename);
             }
             
         }else if(pkt->stream_index == audio_stream_idx){//处理音频PCM
@@ -205,32 +207,31 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             fprintf(stderr, "参数：nb_samples:%d sample_fmt:%d channels:%d sample_rate：%d   linesize0:%d linesize1:%d channels:%d\n",frame->nb_samples,dec_ctx->sample_fmt,dec_ctx->channels,dec_ctx->sample_rate,frame->linesize[0],frame->linesize[1],frame->channels);
             
             //nb_samples:当前帧的音频采样个数？
-            if (audio_pcm_file) {
-                unsigned long len = frame->nb_samples * dec_ctx->channels * data_size;
-                void *audio_frame_bytes = malloc(len);
-                unsigned long pos = 0;
-                //pcm数据写入本地文件
-                for (i = 0; i < frame->nb_samples; i++){
-                    for (ch = 0; ch < dec_ctx->channels; ch++){
-//                        fwrite(frame->data[ch] + data_size*i, 1, data_size, audio_pcm_file);
-                        
-                        memcpy(audio_frame_bytes + pos, frame->data[ch] + data_size*i, data_size);
-                        pos += data_size;
+            unsigned long len = frame->nb_samples * dec_ctx->channels * data_size;
+            void *audio_frame_bytes = malloc(len);
+            unsigned long pos = 0;
+            //pcm数据写入缓存或者本地文件
+            for (i = 0; i < frame->nb_samples; i++){
+                for (ch = 0; ch < dec_ctx->channels; ch++){
+                    if (audio_pcm_file) {
+                        fwrite(frame->data[ch] + data_size*i, 1, data_size, audio_pcm_file);
                     }
+                    
+                    memcpy(audio_frame_bytes + pos, frame->data[ch] + data_size*i, data_size);
+                    pos += data_size;
                 }
-                
-                
-                double time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
-                double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
-                printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
-                struct gl_frame_type frame_info;
-                frame_info.time = time;
-                frame_info.duration = duration;
-                //发送数据到外部
-                get_audio_data_fun(targetObj,audio_frame_bytes,len,frame_info);
-                
-                free(audio_frame_bytes);
             }
+            //当前帧播放时间与持续时长
+            double time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+            double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+            printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
+            struct gl_frame_type frame_info;
+            frame_info.time = time;
+            frame_info.duration = duration;
+            //发送数据到外部
+            get_audio_data_fun(targetObj,audio_frame_bytes,len,frame_info);
+            
+            free(audio_frame_bytes);
             
         }
         
@@ -358,15 +359,12 @@ void create_thread_decoder_start(void) {
     pthread_detach(th_read_frame);
 }
 
-int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,GVDFType get_video_data) {
+int start_play_video(void *target,const char *videofilePaht) {
     gl_set_status(1);
     targetObj = target;
-    get_audio_data_fun = get_audio_data;
-    get_video_data_fun = get_video_data;
     
     int ret = 0;
-    video_src_filePath = filePaht;
-    
+    video_src_filePath = videofilePaht;
     printf("测试地址指针赋值完成：\n视频:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_filePath,&audio_pcm_filePath,&video_src_filePath);
     //打开文件 初始化格式上下文
     if (avformat_open_input(&fmt_ctx, video_src_filePath, NULL, NULL) < 0) {
@@ -416,7 +414,7 @@ int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,G
 }
 
 
-int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht,GADFType get_audio_data,GVDFType get_video_data) {
+int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht) {
     
     video_yuv_filePath = yuvfilePath;
     audio_pcm_filePath = pcmfilePaht;
@@ -425,7 +423,7 @@ int start_play_video_and_save_file(void *target,const char *videofilePaht,const 
     if (!audio_pcm_file) {
         gl_set_status(400);
     }
-    return start_play_video(target, videofilePaht, get_audio_data, get_video_data);
+    return start_play_video(target, videofilePaht);
 }
 
 //暂停
