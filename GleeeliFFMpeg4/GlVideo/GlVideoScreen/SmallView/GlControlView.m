@@ -69,6 +69,8 @@ static NSInteger padding = 8;
         _playSlider.continuous = YES;
         self.tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(handleTap:)];
         [_playSlider addTarget:self action:@selector(handleSliderPosition:) forControlEvents:UIControlEventValueChanged];
+        [_playSlider addTarget:self action:@selector(handleSliderDrageStart:) forControlEvents:UIControlEventTouchDown];
+        [_playSlider addTarget:self action:@selector(handleSliderDrageEnd:) forControlEvents:UIControlEventTouchUpInside | UIControlEventTouchUpOutside|UIControlEventTouchDragExit|UIControlEventTouchCancel];
         [_playSlider addGestureRecognizer:self.tapGesture];
         _playSlider.maximumTrackTintColor = [UIColor clearColor];
         _playSlider.minimumTrackTintColor = [UIColor whiteColor];
@@ -163,6 +165,7 @@ static NSInteger padding = 8;
     self.bufferSlier.frame = self.playSlider.frame;
 }
 
+#pragma mark 按钮事件
 - (void)hanlePlayOrPauseBtn:(UIButton *)button {
     button.selected = !button.selected;
     if ([self.delegate respondsToSelector:@selector(controlView:withPlayOrPauseButton:)]) {
@@ -175,11 +178,13 @@ static NSInteger padding = 8;
         [self.delegate controlView:self withLargeButton:button];
     }
 }
+
 -(void)handleSliderPosition:(UISlider *)slider{
     if ([self.delegate respondsToSelector:@selector(controlView:draggedPositionWithSlider:)]) {
         [self.delegate controlView:self draggedPositionWithSlider:self.playSlider];
     }
 }
+
 -(void)handleTap:(UITapGestureRecognizer *)gesture{
     CGPoint point = [gesture locationInView:self.playSlider];
     CGFloat pointX = point.x;
@@ -189,6 +194,19 @@ static NSInteger padding = 8;
         [self.delegate controlView:self pointSliderLocationWithCurrentValue:currentValue];
     }
 }
+
+-(void)handleSliderDrageStart:(UISlider *)slider{
+    if ([self.delegate respondsToSelector:@selector(controlView:draggedStartWithSlider:)]) {
+        [self.delegate controlView:self draggedStartWithSlider:self.playSlider];
+    }
+}
+
+-(void)handleSliderDrageEnd:(UISlider *)slider{
+    if ([self.delegate respondsToSelector:@selector(controlView:draggedEndWithSlider:)]) {
+        [self.delegate controlView:self draggedEndWithSlider:self.playSlider];
+    }
+}
+
 
 //setter 和 getter方法
 -(void)setValue:(CGFloat)value{

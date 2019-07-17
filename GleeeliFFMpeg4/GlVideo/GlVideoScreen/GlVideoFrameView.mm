@@ -307,7 +307,10 @@
                         [weakSelf updateFrameTexture:model];
                     });
                     [NSThread sleepForTimeInterval:model.duration];
-                    [weakSelf.queueArray removeObjectAtIndex:0];
+                    
+                    if ([weakSelf.queueArray count] > 0) {//此处拖动进度时导致为0
+                        [weakSelf.queueArray removeObjectAtIndex:0];
+                    }
                 }
                 
             }else {//处理没帧缓存的情况，则隔0.01秒查看一次
@@ -324,8 +327,17 @@
     _videoStatus = GL_STATUS_VIDEO_PAUSE;
 }
 
+/**
+ 清楚缓存
+ */
+- (void)clearCache {
+    if ([_queueArray count] > 0) {
+        [_queueArray removeAllObjects];
+    }
+}
+
 - (void)dealloc {
-    [_queueArray removeAllObjects];
+    
     _videoStatus = 0;
 }
 @end

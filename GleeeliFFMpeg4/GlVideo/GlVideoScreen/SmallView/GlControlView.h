@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 @class GlControlView;
 @protocol GlControlViewDelegate <NSObject>
-@required
+@optional
 /**
  点击UISlider获取点击点
  
@@ -25,6 +25,10 @@
  @param slider UISlider
  */
 -(void)controlView:(GlControlView *)controlView draggedPositionWithSlider:(UISlider *)slider ;
+//拖动开始
+-(void)controlView:(GlControlView *)controlView draggedStartWithSlider:(UISlider *)slider;
+//拖动结束
+-(void)controlView:(GlControlView *)controlView draggedEndWithSlider:(UISlider *)slider;
 
 /**
  点击放大按钮的响应事件

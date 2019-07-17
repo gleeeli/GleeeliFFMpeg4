@@ -56,6 +56,9 @@ int gl_test_init_and_open_decoder_save_file(void *target,const char *videofilePa
 void gl_pause_decoder(void);
 //开始
 void gl_start_decoder(void);
+
+//从指定的秒数开始解码
+void gl_decoder_seek(double seconds);
 /**
  解码结束
  */

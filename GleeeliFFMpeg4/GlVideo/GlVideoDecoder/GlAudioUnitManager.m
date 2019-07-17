@@ -245,7 +245,9 @@ static OSStatus PlayCallback(void *inRefCon,
  清楚缓存
  */
 - (void)clearCache {
-    [self.queueArray removeAllObjects];
+    if ([self.queueArray count] >0) {
+        [self.queueArray removeAllObjects];
+    }
 }
 
 - (void)dealloc {

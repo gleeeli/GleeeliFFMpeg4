@@ -32,5 +32,10 @@
  暂停显示缓存的帧数据
  */
 - (void)pauseShowFrame;
+
+/**
+ 清楚缓存
+ */
+- (void)clearCache;
 @end
 

@@ -20,8 +20,9 @@
 
 @interface GlPlayerViewController ()<GlPlayeAudioDelegate,GlControlViewDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
-@property (nonatomic, strong) GlVideoFrameView *glView;
-@property (nonatomic, strong) GlControlView *cview;
+@property (nonatomic, strong) GlVideoFrameView *videoView;
+@property (nonatomic, strong) GlControlView *controlView;
+@property (nonatomic, assign) BOOL isDrageing;//是否正在拖拽
 @end
 
 @implementation GlPlayerViewController
@@ -54,11 +55,12 @@
 - (void)initVideo {
     NSUInteger widht = YUV_Width;
     NSUInteger height = YUV_Height;
+    self.isDrageing = NO;
     
     CGFloat glheight = SCREEN_WIDTH / widht * height;
     
-    self.glView = [[GlVideoFrameView alloc] initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, glheight)];
-    [self.view addSubview:self.glView];
+    self.videoView = [[GlVideoFrameView alloc] initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, glheight)];
+    [self.view addSubview:self.videoView];
     
     //测试直接显示用的文件： decode_video720x480YUV420P
 //    NSString *inputFilePath = [[NSBundle mainBundle] pathForResource:@"176x144_yuv420p" ofType:@"yuv"];
@@ -67,8 +69,8 @@
     
     CGFloat cvH = 44;
     CGFloat cvY = glheight - cvH;
-    GlControlView *cview = [[GlControlView alloc] initWithFrame:CGRectMake(0, cvY, self.glView.frame.size.width, 44)];
-    self.cview = cview;
+    GlControlView *cview = [[GlControlView alloc] initWithFrame:CGRectMake(0, cvY, self.videoView.frame.size.width, 44)];
+    self.controlView = cview;
     cview.delegate = self;
     cview.value = 0;
     cview.minValue = 0.f;
@@ -77,7 +79,7 @@
 //    self.controlView.totalTime = [self convertTime:second];
 //    self.controlView.minValue = 0;
 //    self.controlView.maxValue = second;
-    [self.glView addSubview:cview];
+    [self.videoView addSubview:cview];
 }
 
 #pragma mark 解码通知
@@ -85,7 +87,7 @@
 void gl_get_format_info_fun(void *inRefCon,struct gl_format_type info) {
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
     dispatch_async(dispatch_get_main_queue(), ^{
-        vc.cview.maxValue = info.duration;
+        vc.controlView.maxValue = info.duration;
         
     });
     
@@ -138,7 +140,7 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     fmodel.chrominanceU = dataU;
     fmodel.chromaV = dataV;
     
-    [self.glView addFrame:fmodel];
+    [self.videoView addFrame:fmodel];
     
 }
 
@@ -147,7 +149,7 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
  */
 - (void)media_decoder_start {
     
-    self.cview.playOrPauseBtn.selected = YES;
+    self.controlView.playOrPauseBtn.selected = YES;
     NSString *mp4filePath = [[NSBundle mainBundle] pathForResource:@"output_ss6_t10" ofType:@"mp4"];
     const char *mp4path = [mp4filePath UTF8String];
     
@@ -169,17 +171,20 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     //开始解码
     gl_start_decoder();
     
-    [self.glView startShowFrame];
+    [self.videoView startShowFrame];
 }
 
 #pragma mark <GlPlayeAudioDelegate>
 //当前音频播放到第几帧，也是主时钟
 - (void)curPlayModel:(GlAudioFrameModel *)fmodel {
     NSLog(@"通知主时钟：%f",fmodel.time);
-    self.glView.mainClockTime = fmodel.time;
-    self.glView.mainDuration = fmodel.duration;
+    self.videoView.mainClockTime = fmodel.time;
+    self.videoView.mainDuration = fmodel.duration;
+
     dispatch_async(dispatch_get_main_queue(), ^{
-        self.cview.value = fmodel.time + fmodel.duration;
+        if (!self.isDrageing) {//未拖拽的时候才更新进度
+            self.controlView.value = fmodel.time + fmodel.duration;
+        }
     });
     
 }
@@ -189,24 +194,21 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
 }
 
 #pragma mark <GlControlViewDelegate>
-/**
- 点击UISlider获取点击点
- 
- @param controlView 控制视图
- @param value 当前点击点
- */
--(void)controlView:(GlControlView *)controlView pointSliderLocationWithCurrentValue:(CGFloat)value {
-    
+-(void)controlView:(GlControlView *)controlView draggedStartWithSlider:(UISlider *)slider {
+    NSLog(@"****拖动开始");
+    self.isDrageing = YES;
 }
 
-/**
- 拖拽UISlider的knob的时间响应代理方法
- 
- @param controlView 控制视图
- @param slider UISlider
- */
--(void)controlView:(GlControlView *)controlView draggedPositionWithSlider:(UISlider *)slider {
-    
+-(void)controlView:(GlControlView *)controlView draggedEndWithSlider:(UISlider *)slider {
+    NSLog(@"****拖动结束");
+    self.isDrageing = NO;
+    [self seekToSeconds:slider.value];
+}
+
+- (void)seekToSeconds:(double)secondes {
+    [self.audioManager clearCache];
+    [self.videoView clearCache];
+    gl_decoder_seek(secondes);
 }
 
 /**
@@ -223,11 +225,11 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     if (button.selected) {
         gl_start_decoder();
         [self.audioManager play];
-        [self.glView startShowFrame];
+        [self.videoView startShowFrame];
     }else {//点击暂停
         gl_pause_decoder();
         [self.audioManager stop];
-        [self.glView pauseShowFrame];
+        [self.videoView pauseShowFrame];
     }
     
 }

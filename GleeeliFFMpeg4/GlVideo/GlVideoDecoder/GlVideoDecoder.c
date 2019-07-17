@@ -30,6 +30,7 @@ static AVPacket pkt;
 static int refcount = 0;//理解：控制多次引用内存，不用反复初始化AVFRame
 static void *targetObj = NULL;
 static pthread_t th_read_frame;
+static int is_decoder_thread_run = 0;//解码线程是否正在运行
 
 pthread_mutex_t mut; //互斥锁类型
 
@@ -44,6 +45,7 @@ pthread_mutex_t mut; //互斥锁类型
  1:初始化
  2：初始化完成，正在解码
  3:暂停
+ 4:暂停完成
  200:解码完成
  -500:发送packet错误
  -501:接收frame出错
@@ -288,8 +290,6 @@ static int open_codec_context(int *stream_idx,
     return 0;
 }
 
-
-
 /**
  解码结束
  */
@@ -331,20 +331,30 @@ void read_frame_function( void *ptr ) {
 //        av_usleep(delay *1000000.0 + 6000);
         //usleep(delay *1000 * 1000);
     }
-    if (status != GL_STATUS_DECODE_PAUSE) {//非暂停，则到这说明解码全部完成
+    
+    
+    if (status!= GL_STATUS_DECODE_PAUSE) {//非暂停，则到这说明解码全部完成
         fprintf(stderr, "success! decoder complete:%d\n",status);
         //解码完成
         gl_set_status(200);
     }
-    
+    //解码线程结束
+    is_decoder_thread_run = 0;
     pthread_mutex_unlock(&mut); //解锁
     pthread_exit("decoder thread exit");
 }
 
 //开启线程开始解码
 void create_thread_decoder_start(void) {
+    
     //更改状态-正在解码
     gl_set_status(GL_STATUS_DECODEING);
+    
+    if (is_decoder_thread_run) {//上一次的解码线程并未结束，不新建
+        printf("warn:Find decoder thread runing,not create new thread");
+        return;
+    }
+    
     //处理线程
     //用默认属性初始化互斥锁
     pthread_mutex_init(&mut,NULL);
@@ -355,6 +365,10 @@ void create_thread_decoder_start(void) {
     if (ret_th != 0) {
         printf("线程1创建失败\n");
     }
+    
+    //标记当前有解码线程正在执行
+    is_decoder_thread_run = 1;
+    
     //分离线程，不阻塞当前线程
     pthread_detach(th_read_frame);
 }
@@ -410,7 +424,6 @@ int gl_init_and_open_decoder(void *target,const char *videofilePaht) {
     return ret < 0;
 }
 
-
 int gl_test_init_and_open_decoder_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht) {
     
     video_yuv_filePath = yuvfilePath;
@@ -431,4 +444,23 @@ void gl_pause_decoder(void) {
 //开始
 void gl_start_decoder(void) {
     create_thread_decoder_start();
+}
+
+//从指定的秒数开始解码
+void gl_decoder_seek(double seconds) {
+    if (video_stream_idx != -1) {//视频流
+        int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[video_stream_idx]->time_base));
+        avformat_seek_file(fmt_ctx, video_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        avcodec_flush_buffers(video_dec_ctx);
+    }
+    
+    if (audio_stream_idx != -1) {//音频流
+        int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base));
+        avformat_seek_file(fmt_ctx, audio_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        avcodec_flush_buffers(audio_dec_ctx);
+    }
+    
+    if (status != GL_STATUS_DECODEING) {
+        gl_start_decoder();
+    }
 }
