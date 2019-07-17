@@ -48,7 +48,6 @@
 }
 
 - (void)play {
-    [self.queueArray removeAllObjects];
     [self initPlayer];
     AudioOutputUnitStart(audioUnit);
 }
@@ -234,6 +233,10 @@ static OSStatus PlayCallback(void *inRefCon,
         //解码完成且没有需要播放的数据则停止
         if ([self.queueArray count] == 0 && self.decoderStatus == 200) {
             [self stop];
+            
+            if (self.delegate && [self.delegate respondsToSelector:@selector(playAudioEnd)]) {
+                [self.delegate playAudioEnd];
+            }
         }
     }
     
@@ -254,11 +257,13 @@ static OSStatus PlayCallback(void *inRefCon,
 
 - (void)stop {
     AudioOutputUnitStop(audioUnit);
-    
-    if (self.delegate && [self.delegate respondsToSelector:@selector(playAudioEnd)]) {
-        [self.delegate playAudioEnd];
-    }
+}
 
+/**
+ 清楚缓存
+ */
+- (void)clearCache {
+    [self.queueArray removeAllObjects];
 }
 
 - (void)dealloc {
@@ -266,7 +271,7 @@ static OSStatus PlayCallback(void *inRefCon,
     AudioOutputUnitStop(audioUnit);
     AudioUnitUninitialize(audioUnit);
     AudioComponentInstanceDispose(audioUnit);
-    [self.queueArray removeAllObjects];
+    [self clearCache];
 }
 
 

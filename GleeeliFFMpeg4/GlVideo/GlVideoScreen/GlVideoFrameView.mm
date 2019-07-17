@@ -13,11 +13,14 @@
 #import "GlRenderRGBHandle.h"
 #import "GlRenderYUVHandle.h"
 
+#define GL_STATUS_VIDEO_PLAYING 1
+#define GL_STATUS_VIDEO_PAUSE 2
+
 @interface GlVideoFrameView()
 @property (nonatomic, strong) CommShader *shader;
 @property (nonatomic, strong) GlRenderHandle *renderHandle;
 @property (atomic, strong) NSMutableArray<GlVideoFrameModel *> *queueArray;
-@property (nonatomic, assign) NSInteger threadStatus;
+@property (atomic, assign) NSInteger videoStatus;
 @end
 
 @implementation GlVideoFrameView
@@ -44,7 +47,9 @@
         self.queueArray = [[NSMutableArray alloc] init];
         [self setupLayer];
         [self setupContext];
-        [self initThread];
+        
+        _mainClockTime = 0;
+        _mainDuration = 0;
         
     }
     return self;
@@ -274,14 +279,16 @@
 }
 
 #pragma mark 处理线程
-- (void)initThread {
-    _threadStatus = 1;
-    _mainClockTime = 0;
-    _mainDuration = 0;
+
+/**
+ 开始显示缓存的帧数据
+ */
+- (void)startShowFrame {
+    _videoStatus = GL_STATUS_VIDEO_PLAYING;
     
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_global_queue(0,0), ^{
-        while (weakSelf.threadStatus) {
+        while (weakSelf.videoStatus == GL_STATUS_VIDEO_PLAYING) {
             if ([weakSelf.queueArray count] > 0) {
                 GlVideoFrameModel *model = [weakSelf.queueArray firstObject];
                 
@@ -303,16 +310,22 @@
                     [weakSelf.queueArray removeObjectAtIndex:0];
                 }
                 
-                
-            }else {
+            }else {//处理没帧缓存的情况，则隔0.01秒查看一次
                 [NSThread sleepForTimeInterval:0.01];
             }
         }
     });
 }
 
+/**
+ 暂停显示缓存的帧数据
+ */
+- (void)pauseShowFrame {
+    _videoStatus = GL_STATUS_VIDEO_PAUSE;
+}
+
 - (void)dealloc {
     [_queueArray removeAllObjects];
-    _threadStatus = 0;
+    _videoStatus = 0;
 }
 @end

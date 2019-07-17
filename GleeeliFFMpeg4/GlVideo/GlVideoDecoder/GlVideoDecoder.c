@@ -33,6 +33,9 @@ static pthread_t th_read_frame;
 
 pthread_mutex_t mut; //互斥锁类型
 
+#define GL_STATUS_DECODEING 2 //正在解码
+#define GL_STATUS_DECODE_PAUSE 3 //暂停
+
 /*
  状态
  大于等于500的错是必须停止的，或需要重新初始化
@@ -40,6 +43,7 @@ pthread_mutex_t mut; //互斥锁类型
  0:未开始
  1:初始化
  2：初始化完成，正在解码
+ 3:暂停
  200:解码完成
  -500:发送packet错误
  -501:接收frame出错
@@ -47,8 +51,6 @@ pthread_mutex_t mut; //互斥锁类型
  */
 static int status = 0;
 
-//static int (*get_audio_data_fun)(void *inRefCon,const void *audio_frame_bytes,unsigned long lenght);
-//static int (*get_video_data_fun)(void *inRefCon,const void *video_frame_bytes,unsigned long lenght);
 static GADFType get_audio_data_fun;
 static GVDFType get_video_data_fun;
 static GlSCFType status_change_notification_fun;
@@ -78,6 +80,8 @@ void gl_register_funs(GlSCFType status_change_notification,GlGFIFun get_format_i
     status_change_notification_fun = status_change_notification;
     get_format_info_fun = get_format_info;
 }
+
+
 
 /**
  将每一行的数据写入文件
@@ -288,7 +292,7 @@ static int open_codec_context(int *stream_idx,
 /**
  解码结束
  */
-void decoder_end_exit(void) {
+void gl_decoder_exit(void) {
     printf("*******释放解码内存*******");
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
@@ -297,6 +301,7 @@ void decoder_end_exit(void) {
     if (audio_pcm_file)
         fclose(audio_pcm_file);
     av_frame_free(&frame);
+    status = 0;
 }
 
 void read_frame_function( void *ptr ) {
@@ -304,18 +309,18 @@ void read_frame_function( void *ptr ) {
     printf("enter thread%s，ID:%u\n",ptr,(unsigned int)th_read_frame);
     
     //获取每帧数据包（pkt），此时每个包可能还包含着多个帧
-    while (av_read_frame(fmt_ctx, &pkt) >= 0) {
+    while (status == GL_STATUS_DECODEING && av_read_frame(fmt_ctx, &pkt) >= 0) {
 
-        if(pkt.stream_index == video_stream_idx){
+        if(pkt.stream_index == video_stream_idx) {
             decode_packet(video_dec_ctx,frame,&pkt);
-        }else if(pkt.stream_index == audio_stream_idx){
+        }else if(pkt.stream_index == audio_stream_idx) {
             decode_packet(audio_dec_ctx,frame,&pkt);
         }
         
         //发生意外结束程序
         if (status >= 500) {
             fprintf(stderr, "Error exit status:%d\n",status);
-            decoder_end_exit();
+            gl_decoder_exit();
             break;
         }
         
@@ -325,11 +330,32 @@ void read_frame_function( void *ptr ) {
 //        av_usleep(delay *1000000.0 + 6000);
         //usleep(delay *1000 * 1000);
     }
-    //解码完成
-    gl_set_status(200);
-    decoder_end_exit();
+    if (status != GL_STATUS_DECODE_PAUSE) {//非暂停，则到这说明解码全部完成
+        fprintf(stderr, "success! decoder complete:%d\n",status);
+        //解码完成
+        gl_set_status(200);
+    }
+    
     pthread_mutex_unlock(&mut); //解锁
     pthread_exit("decoder thread exit");
+}
+
+//开启线程开始解码
+void create_thread_decoder_start(void) {
+    //更改状态-正在解码
+    gl_set_status(GL_STATUS_DECODEING);
+    //处理线程
+    //用默认属性初始化互斥锁
+    pthread_mutex_init(&mut,NULL);
+    char *message = "thread1---read frame";
+    int ret_th;
+    ret_th = pthread_create(&th_read_frame, NULL, (void *)&read_frame_function, (void *) message);
+    // 线程创建成功，返回0,失败返回失败号
+    if (ret_th != 0) {
+        printf("线程1创建失败\n");
+    }
+    //分离线程，不阻塞当前线程
+    pthread_detach(th_read_frame);
 }
 
 int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,GVDFType get_video_data) {
@@ -375,7 +401,7 @@ int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,G
     if (!frame) {
         fprintf(stderr, "Could not allocate frame\n");
         ret = AVERROR(ENOMEM);
-        decoder_end_exit();
+        gl_decoder_exit();
         return 0;
     }
     
@@ -383,19 +409,8 @@ int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,G
     pkt.data = NULL;
     pkt.size = 0;
     
-    gl_set_status(2);
-    //处理线程
-    //用默认属性初始化互斥锁
-    pthread_mutex_init(&mut,NULL);
-    char *message = "thread1---read frame";
-    int ret_th;
-    ret_th = pthread_create(&th_read_frame, NULL, (void *)&read_frame_function, (void *) message);
-    // 线程创建成功，返回0,失败返回失败号
-    if (ret_th != 0) {
-        printf("线程1创建失败\n");
-    }
-    //分离线程，不阻塞当前线程
-    pthread_detach(th_read_frame);
+    //开启线程开始解码
+    create_thread_decoder_start();
     
     return ret < 0;
 }
@@ -413,3 +428,12 @@ int start_play_video_and_save_file(void *target,const char *videofilePaht,const 
     return start_play_video(target, videofilePaht, get_audio_data, get_video_data);
 }
 
+//暂停
+void gl_pause_decoder(void) {
+    gl_set_status(GL_STATUS_DECODE_PAUSE);
+}
+
+//开始
+void gl_start_decoder(void) {
+    create_thread_decoder_start();
+}

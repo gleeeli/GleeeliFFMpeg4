@@ -22,5 +22,15 @@
  往缓冲数组增加帧
  */
 - (void)addFrame:(GlVideoFrameModel *)model;
+
+/**
+ 开始显示缓存的帧数据
+ */
+- (void)startShowFrame;
+
+/**
+ 暂停显示缓存的帧数据
+ */
+- (void)pauseShowFrame;
 @end
 

@@ -31,6 +31,12 @@
 @property (atomic, assign) int decoderStatus;//解码状态
 
 - (void)play;
+- (void)stop;
+
+/**
+ 清楚缓存
+ */
+- (void)clearCache;
 @end
 
 

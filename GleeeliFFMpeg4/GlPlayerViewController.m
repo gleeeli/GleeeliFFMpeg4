@@ -18,7 +18,7 @@
 #define YUV_Width 720
 #define YUV_Height 480
 
-@interface GlPlayerViewController ()<GlPlayeAudioDelegate>
+@interface GlPlayerViewController ()<GlPlayeAudioDelegate,GlControlViewDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
 @property (nonatomic, strong) GlVideoFrameView *glView;
 @property (nonatomic, strong) GlControlView *cview;
@@ -69,6 +69,7 @@
     CGFloat cvY = glheight - cvH;
     GlControlView *cview = [[GlControlView alloc] initWithFrame:CGRectMake(0, cvY, self.glView.frame.size.width, 44)];
     self.cview = cview;
+    cview.delegate = self;
     cview.value = 0;
     cview.minValue = 0.f;
     cview.currentTime = @"00:00";
@@ -146,6 +147,7 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
  */
 - (void)media_decoder_start {
     
+    self.cview.playOrPauseBtn.selected = YES;
     NSString *mp4filePath = [[NSBundle mainBundle] pathForResource:@"output_ss6_t10" ofType:@"mp4"];
     const char *mp4path = [mp4filePath UTF8String];
     
@@ -171,6 +173,8 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
 //    start_play_video((__bridge void *)(self), mp4path, get_audio_data_fun, get_video_data_fun);
     start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath, get_audio_data_fun, get_video_data_fun);
+    
+    [self.glView startShowFrame];
 }
 
 #pragma mark <GlPlayeAudioDelegate>
@@ -189,4 +193,51 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
 }
 
+#pragma mark <GlControlViewDelegate>
+/**
+ 点击UISlider获取点击点
+ 
+ @param controlView 控制视图
+ @param value 当前点击点
+ */
+-(void)controlView:(GlControlView *)controlView pointSliderLocationWithCurrentValue:(CGFloat)value {
+    
+}
+
+/**
+ 拖拽UISlider的knob的时间响应代理方法
+ 
+ @param controlView 控制视图
+ @param slider UISlider
+ */
+-(void)controlView:(GlControlView *)controlView draggedPositionWithSlider:(UISlider *)slider {
+    
+}
+
+/**
+ 点击放大按钮的响应事件
+ 
+ @param controlView 控制视图
+ @param button 全屏按钮
+ */
+-(void)controlView:(GlControlView *)controlView withLargeButton:(UIButton *)button {
+    
+}
+
+-(void)controlView:(GlControlView *)controlView withPlayOrPauseButton:(UIButton *)button {
+    if (button.selected) {
+        gl_start_decoder();
+        [self.audioManager play];
+        [self.glView startShowFrame];
+    }else {//点击暂停
+        gl_pause_decoder();
+        [self.audioManager stop];
+        [self.glView pauseShowFrame];
+    }
+    
+}
+
+- (void)dealloc {
+    gl_decoder_exit();
+}
 @end

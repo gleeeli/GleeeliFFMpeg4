@@ -44,4 +44,13 @@ void gl_register_funs(GlSCFType status_change_notification,GlGFIFun get_format_i
 int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,GVDFType get_video_data);
 
 int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht,GADFType get_audio_data,GVDFType get_video_data);
+
+//暂停
+void gl_pause_decoder(void);
+//开始
+void gl_start_decoder(void);
+/**
+ 解码结束
+ */
+void gl_decoder_exit(void);
 #endif /* GlVideoDecoder_h */

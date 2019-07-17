@@ -164,6 +164,7 @@ static NSInteger padding = 8;
 }
 
 - (void)hanlePlayOrPauseBtn:(UIButton *)button {
+    button.selected = !button.selected;
     if ([self.delegate respondsToSelector:@selector(controlView:withPlayOrPauseButton:)]) {
         [self.delegate controlView:self withPlayOrPauseButton:button];
     }
