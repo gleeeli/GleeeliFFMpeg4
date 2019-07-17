@@ -13,6 +13,7 @@
 //视频
 #import "GlVideoFrameYUVModel.h"
 #import "GlVideoFrameView.h"
+#import "GlControlView.h"
 
 #define YUV_Width 720
 #define YUV_Height 480
@@ -20,6 +21,7 @@
 @interface GlPlayerViewController ()<GlPlayeAudioDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
 @property (nonatomic, strong) GlVideoFrameView *glView;
+@property (nonatomic, strong) GlControlView *cview;
 @end
 
 @implementation GlPlayerViewController
@@ -27,7 +29,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor whiteColor];
-    
     
     [self initAudio];
     [self initVideo];
@@ -63,9 +64,32 @@
 //    NSString *inputFilePath = [[NSBundle mainBundle] pathForResource:@"176x144_yuv420p" ofType:@"yuv"];
 //    const char *yuvFilePath = [inputFilePath UTF8String];
 //    unsigned char *buffer = readYUV(yuvFilePath);
+    
+    CGFloat cvH = 44;
+    CGFloat cvY = glheight - cvH;
+    GlControlView *cview = [[GlControlView alloc] initWithFrame:CGRectMake(0, cvY, self.glView.frame.size.width, 44)];
+    self.cview = cview;
+    cview.value = 0;
+    cview.minValue = 0.f;
+    cview.currentTime = @"00:00";
+    cview.totalTime = @"00:00";
+//    self.controlView.totalTime = [self convertTime:second];
+//    self.controlView.minValue = 0;
+//    self.controlView.maxValue = second;
+    [self.glView addSubview:cview];
 }
 
 #pragma mark 解码通知
+//得到时长等信息
+void gl_get_format_info_fun(void *inRefCon,struct gl_format_type info) {
+    GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        vc.cview.maxValue = info.duration;
+        
+    });
+    
+}
+
 //状态改变通知
 void gl_status_chang_notification(void *inRefCon,int status) {
     printf("状态改变通知:%d",status);
@@ -143,17 +167,26 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
     printf("测试地址指针开始前：\nvideo_yuv_filePath:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_path,&pcmpath,&mp4path);
     
-    gl_register_funs(gl_status_chang_notification);
+    gl_register_funs(gl_status_chang_notification,gl_get_format_info_fun);
     
 //    start_play_video((__bridge void *)(self), mp4path, get_audio_data_fun, get_video_data_fun);
     start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath, get_audio_data_fun, get_video_data_fun);
 }
 
 #pragma mark <GlPlayeAudioDelegate>
+//当前音频播放到第几帧，也是主时钟
 - (void)curPlayModel:(GlAudioFrameModel *)fmodel {
     NSLog(@"通知主时钟：%f",fmodel.time);
     self.glView.mainClockTime = fmodel.time;
     self.glView.mainDuration = fmodel.duration;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        self.cview.value = fmodel.time + fmodel.duration;
+    });
+    
+}
+
+- (void)playAudioEnd {
+    
 }
 
 @end

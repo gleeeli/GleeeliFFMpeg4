@@ -218,7 +218,7 @@ static OSStatus PlayCallback(void *inRefCon,
     const NSUInteger bytesLeft = (curModel.data.length - curpos);
     const NSUInteger frameSizeOf = self.channel * sizeof(float);
     const NSUInteger bytesToCopy = MIN(inNumberFrames * frameSizeOf, bytesLeft);
-    const NSUInteger framesToCopy = bytesToCopy / frameSizeOf;
+    //const NSUInteger framesToCopy = bytesToCopy / frameSizeOf;
     
     //拷贝到frameBuffer
     memcpy(frameBuffer, bytes, bytesToCopy);
@@ -255,8 +255,8 @@ static OSStatus PlayCallback(void *inRefCon,
 - (void)stop {
     AudioOutputUnitStop(audioUnit);
     
-    if (self.delegate && [self.delegate respondsToSelector:@selector(playEnd)]) {
-        [self.delegate playEnd];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(playAudioEnd)]) {
+        [self.delegate playAudioEnd];
     }
 
 }

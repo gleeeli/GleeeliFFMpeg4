@@ -52,6 +52,7 @@ static int status = 0;
 static GADFType get_audio_data_fun;
 static GVDFType get_video_data_fun;
 static GlSCFType status_change_notification_fun;
+static GlGFIFun get_format_info_fun;
 
 /**
  返回当前解码状态
@@ -73,8 +74,9 @@ void gl_set_status(int now_status) {
 
  @param status_change_notification 状态改变通知
  */
-void gl_register_funs(GlSCFType status_change_notification) {
+void gl_register_funs(GlSCFType status_change_notification,GlGFIFun get_format_info){
     status_change_notification_fun = status_change_notification;
+    get_format_info_fun = get_format_info;
 }
 
 /**
@@ -173,8 +175,8 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
 //                snprintf(filename, sizeof(filename), "%s/%d-%s", folderPaht, dec_ctx->frame_number, fileName);
                 //yuv_save(frame->data, frame->linesize, frame->width, frame->height, filename);
                 
-                float time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
-                float duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+                double time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
+                double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
                 struct gl_frame_type frame_info;
                 frame_info.time = time;
                 frame_info.duration = duration;
@@ -214,8 +216,8 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
                 }
                 
                 
-                float time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
-                float duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+                double time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
+                double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
                 printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
                 struct gl_frame_type frame_info;
                 frame_info.time = time;
@@ -361,6 +363,11 @@ int start_play_video(void *target,const char *filePaht,GADFType get_audio_data,G
     if (open_codec_context(&audio_stream_idx, &audio_dec_ctx, fmt_ctx, AVMEDIA_TYPE_AUDIO) >= 0) {
         audio_stream = fmt_ctx->streams[audio_stream_idx];
     }
+    
+    //通知时长等信息
+    struct gl_format_type gl_format;
+    gl_format.duration = fmt_ctx->duration * av_q2d(AV_TIME_BASE_Q);
+    get_format_info_fun(targetObj,gl_format);
     
     av_dump_format(fmt_ctx, 0, video_src_filePath, 0);
     

@@ -39,6 +39,7 @@
 		1939EC9422C1B498008BF118 /* output.h264 in Resources */ = {isa = PBXBuildFile; fileRef = 1939EC9322C1B498008BF118 /* output.h264 */; };
 		19587D0222DC56E40037CE76 /* GlAudioFrameModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 19587D0122DC56E40037CE76 /* GlAudioFrameModel.m */; };
 		1962859B22BCC31900C5EAB0 /* test3.mp2 in Resources */ = {isa = PBXBuildFile; fileRef = 1962859A22BCC31900C5EAB0 /* test3.mp2 */; };
+		1996A36822DEA7FA0074B2E1 /* GlControlView.m in Sources */ = {isa = PBXBuildFile; fileRef = 1996A36622DEA7FA0074B2E1 /* GlControlView.m */; };
 		19B7E58422C064BE00E60075 /* decode_video.c in Sources */ = {isa = PBXBuildFile; fileRef = 19B7E58322C064BE00E60075 /* decode_video.c */; };
 		19B7E58622C0709E00E60075 /* output.avi in Resources */ = {isa = PBXBuildFile; fileRef = 19B7E58522C0709E00E60075 /* output.avi */; };
 		19B7E58922C077F000E60075 /* demuxing_decoding.c in Sources */ = {isa = PBXBuildFile; fileRef = 19B7E58822C077F000E60075 /* demuxing_decoding.c */; };
@@ -213,6 +214,8 @@
 		19587D0022DC56E40037CE76 /* GlAudioFrameModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GlAudioFrameModel.h; sourceTree = "<group>"; };
 		19587D0122DC56E40037CE76 /* GlAudioFrameModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GlAudioFrameModel.m; sourceTree = "<group>"; };
 		1962859A22BCC31900C5EAB0 /* test3.mp2 */ = {isa = PBXFileReference; lastKnownFileType = file; path = test3.mp2; sourceTree = "<group>"; };
+		1996A36622DEA7FA0074B2E1 /* GlControlView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlControlView.m; sourceTree = "<group>"; };
+		1996A36722DEA7FA0074B2E1 /* GlControlView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlControlView.h; sourceTree = "<group>"; };
 		19B7E58222C064BE00E60075 /* decode_video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = decode_video.h; sourceTree = "<group>"; };
 		19B7E58322C064BE00E60075 /* decode_video.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = decode_video.c; sourceTree = "<group>"; };
 		19B7E58522C0709E00E60075 /* output.avi */ = {isa = PBXFileReference; lastKnownFileType = video.avi; path = output.avi; sourceTree = "<group>"; };
@@ -571,6 +574,15 @@
 			path = GlVideoDecoder;
 			sourceTree = "<group>";
 		};
+		1996A36522DEA7D80074B2E1 /* SmallView */ = {
+			isa = PBXGroup;
+			children = (
+				1996A36722DEA7FA0074B2E1 /* GlControlView.h */,
+				1996A36622DEA7FA0074B2E1 /* GlControlView.m */,
+			);
+			path = SmallView;
+			sourceTree = "<group>";
+		};
 		69DA8CCC22D9826100D14398 /* GlVideo */ = {
 			isa = PBXGroup;
 			children = (
@@ -583,6 +595,7 @@
 		69DA8CCD22D9828D00D14398 /* GlVideoScreen */ = {
 			isa = PBXGroup;
 			children = (
+				1996A36522DEA7D80074B2E1 /* SmallView */,
 				69DA8CE122D982C000D14398 /* GlVideoFrameView.h */,
 				69DA8CCE22D982BE00D14398 /* GlVideoFrameView.mm */,
 				69DA8CD322D982BF00D14398 /* Model */,
@@ -729,6 +742,7 @@
 				1909E01922BB32EC00A2C24A /* decode_audio_4.c in Sources */,
 				1909DEC022BB2B4A00A2C24A /* AppDelegate.m in Sources */,
 				69DA8CE822D982C100D14398 /* GlRenderRGBHandle.mm in Sources */,
+				1996A36822DEA7FA0074B2E1 /* GlControlView.m in Sources */,
 				69DA8CE322D982C100D14398 /* GlVideoFrameView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

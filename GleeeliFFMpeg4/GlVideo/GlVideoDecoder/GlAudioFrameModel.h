@@ -10,6 +10,6 @@
 
 @interface GlAudioFrameModel : NSObject
 @property (nonatomic, strong) NSData *data;
-@property (nonatomic, assign) float time;
-@property (nonatomic, assign) float duration;
+@property (nonatomic, assign) double time;
+@property (nonatomic, assign) double duration;
 @end

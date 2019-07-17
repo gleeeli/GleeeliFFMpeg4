@@ -11,8 +11,8 @@
 #import "GlVideoFrameRGBModel.h"
 
 @interface GlVideoFrameView : UIView
-@property (atomic, assign) float mainClockTime;
-@property (atomic, assign) float mainDuration;
+@property (atomic, assign) double mainClockTime;
+@property (atomic, assign) double mainDuration;
 /**
  更新一帧数据
  */

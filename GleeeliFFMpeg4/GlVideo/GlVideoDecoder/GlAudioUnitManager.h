@@ -11,7 +11,7 @@
 
 @protocol GlPlayeAudioDelegate <NSObject>
 @optional
-- (void)playEnd;
+- (void)playAudioEnd;
 - (void)curPlayModel:(GlAudioFrameModel *)fmodel;
 
 @end
