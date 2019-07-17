@@ -41,9 +41,16 @@ int gl_get_cur_status(void);
  */
 void gl_register_funs(GADFType get_audio_data,GVDFType get_video_data,GlSCFType status_change_notification,GlGFIFun get_format_info);
 
-int start_play_video(void *target,const char *videofilePaht);
+/**
+ 初始化基本信息，以及打开解码器
 
-int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht);
+ @param target 往后需要返回的对象
+ @param videofilePaht 视频地址
+ */
+int gl_init_and_open_decoder(void *target,const char *videofilePaht);
+
+//测试用的，保存pcm和yuv文件
+int gl_test_init_and_open_decoder_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht);
 
 //暂停
 void gl_pause_decoder(void);
@@ -52,5 +59,5 @@ void gl_start_decoder(void);
 /**
  解码结束
  */
-void gl_decoder_exit(void);
+void gl_exit_decoder(void);
 #endif /* GlVideoDecoder_h */

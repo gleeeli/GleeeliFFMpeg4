@@ -153,13 +153,6 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
     NSString *videofilePath = [kPathDocument stringByAppendingPathComponent:@"movie_video.yuv"];
     const char *video_yuv_path = [videofilePath UTF8String];
-    
-//    unsigned long len = strlen(video_yuv_path)+1;
-//    char* buf = (char*)malloc(sizeof(char) * len);
-//    strcpy(buf, video_yuv_path);
-//
-//    const char *video_yuv_path1 = buf;
-
     NSLog(@"解封装后的video_yuv文件路径：%@",videofilePath);
     
     
@@ -168,11 +161,13 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     NSLog(@"解码后的pcm文件路径：%@",pcmfilePath);
     
     printf("测试地址指针开始前：\nvideo_yuv_filePath:%p\n音频pcm：%p\n原始地址：%p\n",&video_yuv_path,&pcmpath,&mp4path);
-    
+    //注册一些通知
     gl_register_funs(get_audio_data_fun, get_video_data_fun,gl_status_chang_notification,gl_get_format_info_fun);
-    
-    start_play_video((__bridge void *)(self), mp4path);
-//    start_play_video_and_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath);
+    //开始初始化一些基本
+    gl_init_and_open_decoder((__bridge void *)(self), mp4path);
+//    gl_test_init_and_open_decoder_save_file((__bridge void *)(self), mp4path, video_yuv_path, pcmpath);
+    //开始解码
+    gl_start_decoder();
     
     [self.glView startShowFrame];
 }
@@ -238,6 +233,6 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
 }
 
 - (void)dealloc {
-    gl_decoder_exit();
+    gl_exit_decoder();
 }
 @end

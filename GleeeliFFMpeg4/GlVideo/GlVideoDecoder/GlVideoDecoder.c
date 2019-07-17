@@ -293,7 +293,7 @@ static int open_codec_context(int *stream_idx,
 /**
  解码结束
  */
-void gl_decoder_exit(void) {
+void gl_exit_decoder(void) {
     printf("*******释放解码内存*******");
     avcodec_free_context(&video_dec_ctx);
     avcodec_free_context(&audio_dec_ctx);
@@ -321,7 +321,7 @@ void read_frame_function( void *ptr ) {
         //发生意外结束程序
         if (status >= 500) {
             fprintf(stderr, "Error exit status:%d\n",status);
-            gl_decoder_exit();
+            gl_exit_decoder();
             break;
         }
         
@@ -359,7 +359,7 @@ void create_thread_decoder_start(void) {
     pthread_detach(th_read_frame);
 }
 
-int start_play_video(void *target,const char *videofilePaht) {
+int gl_init_and_open_decoder(void *target,const char *videofilePaht) {
     gl_set_status(1);
     targetObj = target;
     
@@ -399,7 +399,7 @@ int start_play_video(void *target,const char *videofilePaht) {
     if (!frame) {
         fprintf(stderr, "Could not allocate frame\n");
         ret = AVERROR(ENOMEM);
-        gl_decoder_exit();
+        gl_exit_decoder();
         return 0;
     }
     
@@ -407,14 +407,11 @@ int start_play_video(void *target,const char *videofilePaht) {
     pkt.data = NULL;
     pkt.size = 0;
     
-    //开启线程开始解码
-    create_thread_decoder_start();
-    
     return ret < 0;
 }
 
 
-int start_play_video_and_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht) {
+int gl_test_init_and_open_decoder_save_file(void *target,const char *videofilePaht,const char *yuvfilePath,const char *pcmfilePaht) {
     
     video_yuv_filePath = yuvfilePath;
     audio_pcm_filePath = pcmfilePaht;
@@ -423,7 +420,7 @@ int start_play_video_and_save_file(void *target,const char *videofilePaht,const 
     if (!audio_pcm_file) {
         gl_set_status(400);
     }
-    return start_play_video(target, videofilePaht);
+    return gl_init_and_open_decoder(target, videofilePaht);
 }
 
 //暂停
