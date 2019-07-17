@@ -226,7 +226,7 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             //当前帧播放时间与持续时长
             double time = frame->pts * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
             double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base);
-            printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
+            //printf("当前音频播放时间:%f秒,本帧时长：%f",time,duration);
             struct gl_frame_type frame_info;
             frame_info.time = time;
             frame_info.duration = duration;
@@ -449,15 +449,18 @@ void gl_start_decoder(void) {
 //从指定的秒数开始解码
 void gl_decoder_seek(double seconds) {
     if (video_stream_idx != -1) {//视频流
+        
         int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[video_stream_idx]->time_base));
-        avformat_seek_file(fmt_ctx, video_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        int r = avformat_seek_file(fmt_ctx, video_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
         avcodec_flush_buffers(video_dec_ctx);
+        printf("seek video result:%d\n",r);
     }
     
     if (audio_stream_idx != -1) {//音频流
         int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base));
-        avformat_seek_file(fmt_ctx, audio_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        int r = avformat_seek_file(fmt_ctx, audio_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
         avcodec_flush_buffers(audio_dec_ctx);
+        printf("seek audio result:%d\n",r);
     }
     
     if (status != GL_STATUS_DECODEING) {
