@@ -14,6 +14,9 @@
 struct gl_frame_type {
     double time;//当前帧的显示时间
     double duration;//显示时长
+    /*video only*/
+    int width;
+    int height;
 };
 
 //基本信息 比如时长

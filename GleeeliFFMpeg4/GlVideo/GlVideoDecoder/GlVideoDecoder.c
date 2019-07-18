@@ -221,6 +221,8 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             struct gl_frame_type frame_info;
             frame_info.time = time;
             frame_info.duration = duration;
+            frame_info.width = frame->width;
+            frame_info.height = frame->height;
             
             //将一帧完整yuv写入内存，并发送出去
             create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);

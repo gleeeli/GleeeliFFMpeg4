@@ -153,8 +153,8 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     NSData *dataV = [NSData dataWithBytes:buffer+ylenght*5/4 length:ylenght/4];
     
     GlVideoFrameYUVModel *fmodel = [[GlVideoFrameYUVModel alloc] init];
-    fmodel.width = YUV_Width;
-    fmodel.height = YUV_Height;
+    fmodel.width = frameInfo.width;
+    fmodel.height = frameInfo.height;
     fmodel.time = frameInfo.time;
     fmodel.duration = frameInfo.duration;
     

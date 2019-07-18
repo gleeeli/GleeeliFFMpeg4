@@ -274,8 +274,10 @@
  往缓冲数组增加帧
  */
 - (void)addFrame:(GlVideoFrameModel *)model {
-    [self.queueArray addObject:model];
-    NSLog(@"添加picture:%ld",[self.queueArray count]);
+    @synchronized (self) {
+        [self.queueArray addObject:model];
+        NSLog(@"添加picture:%ld",[self.queueArray count]);
+    }
 }
 
 #pragma mark 处理线程
@@ -294,8 +296,10 @@
                 
                 
                 if ((model.time + model.duration) < weakSelf.mainClockTime) {//显示时间已过
-                    [weakSelf.queueArray removeObjectAtIndex:0];//丢弃
-                    NSLog(@"***同步异常-丢弃:%f",(weakSelf.mainClockTime - (model.time + model.duration)));
+                    @synchronized (self) {
+                        [weakSelf.queueArray removeObjectAtIndex:0];//丢弃
+                        NSLog(@"***同步异常-丢弃:%f",(weakSelf.mainClockTime - (model.time + model.duration)));
+                    }
                 }else if((model.time > (weakSelf.mainClockTime + weakSelf.mainDuration)) && (weakSelf.mainClockTime > 0)) {//显示时间未到，延迟显示
                     NSTimeInterval sleepTime = model.time - weakSelf.mainClockTime;
                     [NSThread sleepForTimeInterval:sleepTime];
@@ -308,15 +312,19 @@
                     });
                     [NSThread sleepForTimeInterval:model.duration];
                     
-                    if ([weakSelf.queueArray count] > 0) {//此处拖动进度时导致为0
-                        [weakSelf.queueArray removeObjectAtIndex:0];
+                    @synchronized (self) {
+                        if ([weakSelf.queueArray count] > 0) {//此处拖动进度时导致为0
+                            [weakSelf.queueArray removeObjectAtIndex:0];
+                        }
                     }
+                    
                 }
                 
             }else {//处理没帧缓存的情况，则隔0.01秒查看一次
                 [NSThread sleepForTimeInterval:0.01];
             }
         }
+        
     });
 }
 
@@ -331,8 +339,10 @@
  清楚缓存
  */
 - (void)clearCache {
-    if ([_queueArray count] > 0) {
-        [_queueArray removeAllObjects];
+    @synchronized (self) {
+        if ([_queueArray count] > 0) {
+            [_queueArray removeAllObjects];
+        }
     }
 }
 
