@@ -174,6 +174,7 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             printf("widht:%d,height:%d\n",frame->width,frame->height);
             fflush(stdout);
             
+            printf("pts:%lld,iskeyFrame:%d\n",frame->pts,frame->key_frame);
             double time = frame->pts * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
             double duration = frame->pkt_duration * av_q2d(fmt_ctx->streams[video_stream_idx]->time_base);
             struct gl_frame_type frame_info;
@@ -451,14 +452,17 @@ void gl_decoder_seek(double seconds) {
     if (video_stream_idx != -1) {//视频流
         
         int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[video_stream_idx]->time_base));
-        int r = avformat_seek_file(fmt_ctx, video_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        //测试无法定位到关键帧
+//        int r = avformat_seek_file(fmt_ctx, video_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        int r = av_seek_frame(fmt_ctx, video_stream_idx, ts, AVSEEK_FLAG_BACKWARD);
         avcodec_flush_buffers(video_dec_ctx);
-        printf("seek video result:%d\n",r);
+        printf("seek video result:%d，seconds:%f,ts:%lld\n",r,seconds,ts);
     }
     
     if (audio_stream_idx != -1) {//音频流
         int64_t ts = (int64_t)(seconds / av_q2d(fmt_ctx->streams[audio_stream_idx]->time_base));
-        int r = avformat_seek_file(fmt_ctx, audio_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+//        int r = avformat_seek_file(fmt_ctx, audio_stream_idx, ts, ts, ts, AVSEEK_FLAG_FRAME);
+        int r = av_seek_frame(fmt_ctx, audio_stream_idx, ts, AVSEEK_FLAG_BACKWARD);
         avcodec_flush_buffers(audio_dec_ctx);
         printf("seek audio result:%d\n",r);
     }

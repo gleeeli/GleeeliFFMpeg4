@@ -17,12 +17,17 @@
 
 #define YUV_Width 720
 #define YUV_Height 480
+#define GlTransitionTime 0.2
+#define GlControlHeight 40
 
 @interface GlPlayerViewController ()<GlPlayeAudioDelegate,GlControlViewDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
 @property (nonatomic, strong) GlVideoFrameView *videoView;
 @property (nonatomic, strong) GlControlView *controlView;
 @property (nonatomic, assign) BOOL isDrageing;//是否正在拖拽
+//是否全屏
+@property (nonatomic,assign,readonly) BOOL isFullScreen;
+@property (nonatomic, assign) CGRect defaultFrame;
 @end
 
 @implementation GlPlayerViewController
@@ -34,6 +39,14 @@
     [self initAudio];
     [self initVideo];
     [self media_decoder_start];
+    
+    [self addNotificationCenter];
+}
+
+//MARK:添加消息中心
+-(void)addNotificationCenter{
+
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(deviceOrientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
 }
 
 - (void)initAudio {
@@ -61,15 +74,15 @@
     
     self.videoView = [[GlVideoFrameView alloc] initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, glheight)];
     [self.view addSubview:self.videoView];
+    self.defaultFrame = self.videoView.frame;
     
     //测试直接显示用的文件： decode_video720x480YUV420P
 //    NSString *inputFilePath = [[NSBundle mainBundle] pathForResource:@"176x144_yuv420p" ofType:@"yuv"];
 //    const char *yuvFilePath = [inputFilePath UTF8String];
 //    unsigned char *buffer = readYUV(yuvFilePath);
     
-    CGFloat cvH = 44;
-    CGFloat cvY = glheight - cvH;
-    GlControlView *cview = [[GlControlView alloc] initWithFrame:CGRectMake(0, cvY, self.videoView.frame.size.width, 44)];
+    CGRect crect = [self getControlFrameWithVideoFrame:self.videoView.frame];
+    GlControlView *cview = [[GlControlView alloc] initWithFrame:crect];
     self.controlView = cview;
     cview.delegate = self;
     cview.value = 0;
@@ -80,6 +93,14 @@
 //    self.controlView.minValue = 0;
 //    self.controlView.maxValue = second;
     [self.videoView addSubview:cview];
+}
+
+- (CGRect)getControlFrameWithVideoFrame:(CGRect)vFrame {
+    
+    CGFloat cvH = GlControlHeight;
+    CGFloat cvY = vFrame.size.height - cvH;
+    CGRect rect = CGRectMake(0, cvY, vFrame.size.width, cvH);
+    return rect;
 }
 
 #pragma mark 解码通知
@@ -218,7 +239,11 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
  @param button 全屏按钮
  */
 -(void)controlView:(GlControlView *)controlView withLargeButton:(UIButton *)button {
-    
+    if (SCREEN_WIDTH<SCREEN_HEIGHT) {
+        [self interfaceOrientation:UIInterfaceOrientationLandscapeRight];
+    }else{
+        [self interfaceOrientation:UIInterfaceOrientationPortrait];
+    }
 }
 
 -(void)controlView:(GlControlView *)controlView withPlayOrPauseButton:(UIButton *)button {
@@ -234,7 +259,62 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
 }
 
+#pragma mark 全屏
+//旋转方向
+- (void)interfaceOrientation:(UIInterfaceOrientation)orientation
+{
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
+        SEL selector             = NSSelectorFromString(@"setOrientation:");
+        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
+        [invocation setSelector:selector];
+        [invocation setTarget:[UIDevice currentDevice]];
+        int val                  = orientation;
+        
+        [invocation setArgument:&val atIndex:2];
+        [invocation invoke];
+    }
+}
+
+-(void)deviceOrientationDidChange:(NSNotification *)notification{
+    UIInterfaceOrientation _interfaceOrientation=[[UIApplication sharedApplication]statusBarOrientation];
+    switch (_interfaceOrientation) {
+        case UIInterfaceOrientationLandscapeLeft:
+        case UIInterfaceOrientationLandscapeRight:
+        {
+            _isFullScreen = YES;
+            CGRect videoRect = [UIApplication sharedApplication].keyWindow.bounds;
+            CGRect controlFrame = [self getControlFrameWithVideoFrame:videoRect];
+
+            NSLog(@"横屏frame：%@",NSStringFromCGRect([UIApplication sharedApplication].keyWindow.bounds));
+            //删除UIView animate可以去除横竖屏切换过渡动画
+            [UIView animateWithDuration:GlTransitionTime delay:0 usingSpringWithDamping:0.5 initialSpringVelocity:0. options:UIViewAnimationOptionTransitionCurlUp animations:^{
+                self.controlView.frame = controlFrame;
+                self.videoView.frame = videoRect;
+            } completion:nil];
+        }
+            break;
+        case UIInterfaceOrientationPortraitUpsideDown:
+        case UIInterfaceOrientationPortrait:
+        {
+            _isFullScreen = NO;
+            [self.view addSubview:self.videoView];
+            
+            CGRect controlFrame = [self getControlFrameWithVideoFrame:self.defaultFrame];
+            //删除UIView animate可以去除横竖屏切换过渡动画
+            [UIView animateKeyframesWithDuration:GlTransitionTime delay:0 options:UIViewKeyframeAnimationOptionCalculationModeLinear animations:^{
+                self.controlView.frame = controlFrame;
+                self.videoView.frame = self.defaultFrame;
+            } completion:nil];
+        }
+            break;
+        case UIInterfaceOrientationUnknown:
+            NSLog(@"UIInterfaceOrientationUnknown");
+            break;
+    }
+}
+
 - (void)dealloc {
     gl_exit_decoder();
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 @end
