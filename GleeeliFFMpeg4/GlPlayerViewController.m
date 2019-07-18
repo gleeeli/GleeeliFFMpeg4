@@ -53,13 +53,8 @@
     
     /*音频处理*/
     self.audioManager = [[GlAudioUnitManager alloc] init];
-    self.audioManager.samplerate = 48000;
-    self.audioManager.channel = 2;
-    self.audioManager.mBitsPerChannel = 32;
-    self.audioManager.formatFlags = @"float32";
     self.audioManager.delegate = self;
-    
-    [self.audioManager play];
+
 }
 
 /**
@@ -107,6 +102,12 @@
 //得到时长等信息
 void gl_get_format_info_fun(void *inRefCon,struct gl_format_type info) {
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
+    
+    vc.audioManager.samplerate = info.sample_rate;
+    vc.audioManager.channel = info.channels;
+    vc.audioManager.mBitsPerChannel = info.mBitsPerChannel;
+    vc.audioManager.formatFlags = [NSString stringWithCString:info.sample_fmt_str encoding:NSUTF8StringEncoding];
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         vc.controlView.maxValue = info.duration;
         
@@ -193,6 +194,7 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     gl_start_decoder();
     
     [self.videoView startShowFrame];
+    [self.audioManager play];
 }
 
 #pragma mark <GlPlayeAudioDelegate>

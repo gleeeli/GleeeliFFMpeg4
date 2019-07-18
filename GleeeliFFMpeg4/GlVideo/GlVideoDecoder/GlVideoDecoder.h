@@ -17,8 +17,20 @@ struct gl_frame_type {
 };
 
 //基本信息 比如时长
+/*
+ { AV_SAMPLE_FMT_U8,  "u8",    "u8"    },
+ { AV_SAMPLE_FMT_S16, "s16be", "s16le" },
+ { AV_SAMPLE_FMT_S32, "s32be", "s32le" },
+ { AV_SAMPLE_FMT_FLT, "f32be", "f32le" },
+ { AV_SAMPLE_FMT_DBL, "f64be", "f64le" }
+ */
 struct gl_format_type {
     double duration;//秒
+    /* audio only */
+    int sample_rate; ///< samples per second
+    int channels;    ///< number of audio channels
+    const char *sample_fmt_str;//u8 s16be
+    int mBitsPerChannel;
 };
 
 typedef int (*GVDFType)(void *inRefCon,const void *video_frame_bytes,unsigned long length,struct gl_frame_type frame_info);

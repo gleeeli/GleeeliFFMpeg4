@@ -91,12 +91,12 @@
     outputFormat.mSampleRate       = self.samplerate; // 采样率
     outputFormat.mFormatID         =  kAudioFormatLinearPCM; // PCM格式
     
-    if ([self.formatFlags isEqualToString:@"int16"]) {
+    if ([self.formatFlags containsString:@"s16"]||[self.formatFlags containsString:@"s32"]) {
         outputFormat.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger;
         if (self.isBigEndian) {
             outputFormat.mFormatFlags      = (kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsBigEndian);
         }
-    }else if ([self.formatFlags isEqualToString:@"float32"]) {
+    }else if ([self.formatFlags containsString:@"f32"]||[self.formatFlags containsString:@"f64"]) {
         outputFormat.mFormatFlags      = kLinearPCMFormatFlagIsFloat;
         if (self.isBigEndian) {
             outputFormat.mFormatFlags      = (kLinearPCMFormatFlagIsFloat | kLinearPCMFormatFlagIsBigEndian);

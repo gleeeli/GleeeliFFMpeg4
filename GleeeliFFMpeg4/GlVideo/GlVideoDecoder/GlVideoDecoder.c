@@ -85,7 +85,48 @@ void gl_register_funs(GADFType get_audio_data,GVDFType get_video_data,GlSCFType 
     get_video_data_fun = get_video_data;
 }
 
+/**
+ 获取采样格式字符串和每个采样位数
 
+ @param fmt 格式字符串
+ @param sample_fmt 获取到的采样格式
+ */
+static int get_format_from_sample_fmt(const char **fmt,int *mBitsPerChannel,
+                                      enum AVSampleFormat sample_fmt)
+{
+    int i;
+    struct sample_fmt_entry {
+        enum AVSampleFormat sample_fmt; const char *fmt_be, *fmt_le; int mBitsPerChannel;
+    } sample_fmt_entries[] = {
+        { AV_SAMPLE_FMT_U8,  "u8",    "u8"    ,8},
+        { AV_SAMPLE_FMT_S16, "s16be", "s16le" ,16},
+        { AV_SAMPLE_FMT_S32, "s32be", "s32le" ,32},
+        { AV_SAMPLE_FMT_FLT, "f32be", "f32le" ,32},
+        { AV_SAMPLE_FMT_DBL, "f64be", "f64le" ,64},
+        
+        { AV_SAMPLE_FMT_U8P,  "u8",    "u8"    ,8},
+        { AV_SAMPLE_FMT_S16P, "s16be", "s16le" ,16},
+        { AV_SAMPLE_FMT_S32P, "s32be", "s32le" ,32},
+        { AV_SAMPLE_FMT_FLTP, "f32be", "f32le" ,32},
+        { AV_SAMPLE_FMT_DBLP, "f64be", "f64le" ,64},
+    };
+    *fmt = NULL;
+    for (i = 0; i < FF_ARRAY_ELEMS(sample_fmt_entries); i++) {
+        struct sample_fmt_entry *entry = &sample_fmt_entries[i];
+        if (sample_fmt == entry->sample_fmt) {
+            *fmt = AV_NE(entry->fmt_be, entry->fmt_le);
+            *mBitsPerChannel = entry->mBitsPerChannel;
+            return 0;
+        }
+    }
+    *fmt = av_get_sample_fmt_name(sample_fmt);
+    //给个默认值
+    *mBitsPerChannel = 0;
+    fprintf(stderr,
+            "sample format %s is not supported as output format\n",
+            av_get_sample_fmt_name(sample_fmt));
+    return -1;
+}
 
 /**
  将每一行的数据写入文件
@@ -406,6 +447,11 @@ int gl_init_and_open_decoder(void *target,const char *videofilePaht) {
     //通知时长等信息
     struct gl_format_type gl_format;
     gl_format.duration = fmt_ctx->duration * av_q2d(AV_TIME_BASE_Q);
+    gl_format.channels = audio_dec_ctx->channels;
+    gl_format.sample_rate = audio_dec_ctx->sample_rate;
+    printf("sample_fmt:%d",audio_dec_ctx->sample_fmt);
+    get_format_from_sample_fmt(&gl_format.sample_fmt_str,&gl_format.mBitsPerChannel, audio_dec_ctx->sample_fmt);
+    //发现一些基本信息
     get_format_info_fun(targetObj,gl_format);
     
     av_dump_format(fmt_ctx, 0, video_src_filePath, 0);
