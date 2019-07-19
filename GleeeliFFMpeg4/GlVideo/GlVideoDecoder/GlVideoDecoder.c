@@ -155,19 +155,32 @@ static void write_yuv_to_buffer(void *video_frame_bytes,unsigned long *pos, unsi
  @param xsize 宽
  @param ysize 高
  */
-static void create_yuv_frame_buffer(uint8_t *data[], int linesize[], int xsize, int ysize,struct gl_frame_type frame_info)
+static void create_video_frame_buffer(uint8_t *data[], int linesize[], int xsize, int ysize,struct gl_frame_type frame_info)
 {
-    unsigned long len = xsize * ysize * 3/2;
-    void *video_frame_bytes = malloc(len);
-    unsigned long pos = 0;
+    unsigned long lenf = xsize * ysize;
+    if (frame_info.format == AV_PIX_FMT_YUV420P) {//yuv数据
+        
+        unsigned long len = lenf * 3/2;
+        void *video_frame_bytes = malloc(len);
+        unsigned long pos = 0;
+        
+        write_yuv_to_buffer(video_frame_bytes,&pos,data[0], linesize[0], xsize, ysize);
+        write_yuv_to_buffer(video_frame_bytes,&pos,data[1], linesize[1], xsize/2, ysize/2);
+        write_yuv_to_buffer(video_frame_bytes,&pos,data[2], linesize[2], xsize/2, ysize/2);
+        
+        //发送数据到外部
+        get_video_data_fun(targetObj,video_frame_bytes,len,frame_info);
+        free(video_frame_bytes);
+    }else if (frame_info.format == AV_PIX_FMT_RGB24) {
+        
+        //发送数据到外部
+        get_video_data_fun(targetObj,data[0],lenf,frame_info);
+    }else {
+        //发送数据到外部
+        get_video_data_fun(targetObj,data[0],lenf,frame_info);
+    }
     
-    write_yuv_to_buffer(video_frame_bytes,&pos,data[0], linesize[0], xsize, ysize);
-    write_yuv_to_buffer(video_frame_bytes,&pos,data[1], linesize[1], xsize/2, ysize/2);
-    write_yuv_to_buffer(video_frame_bytes,&pos,data[2], linesize[2], xsize/2, ysize/2);
-
-    //发送数据到外部
-    get_video_data_fun(targetObj,video_frame_bytes,len,frame_info);
-    free(video_frame_bytes);
+    
 }
 
 /**
@@ -223,9 +236,10 @@ static void decode_packet(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt
             frame_info.duration = duration;
             frame_info.width = frame->width;
             frame_info.height = frame->height;
+            frame_info.format = frame->format;
             
             //将一帧完整yuv写入内存，并发送出去
-            create_yuv_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);
+            create_video_frame_buffer(frame->data, frame->linesize, frame->width, frame->height,frame_info);
             
             if (video_yuv_filePath) {//需要保存到本地
                 char filename[1024];

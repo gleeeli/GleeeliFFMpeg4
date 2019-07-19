@@ -14,6 +14,12 @@
 struct gl_frame_type {
     double time;//当前帧的显示时间
     double duration;//显示时长
+    /**
+     * 未知则为：-1
+     * 视频则是 enum AVPixelFormat (yuv420p,rgb)(AV_PIX_FMT_YUV420P,AV_PIX_FMT_RGB24)
+     * 音频则是：enum AVSampleFormat (mp3,pcm)
+     */
+    int format;
     /*video only*/
     int width;
     int height;

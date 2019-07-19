@@ -17,8 +17,8 @@
 
 #define YUV_Width 720
 #define YUV_Height 480
-#define GlTransitionTime 0.2
-#define GlControlHeight 40
+#define GlTransitionTime 0.2 //全屏时动画时间
+#define GlControlHeight 40 //底部控件的高度
 
 @interface GlPlayerViewController ()<GlPlayeAudioDelegate,GlControlViewDelegate>
 @property (nonatomic, strong) GlAudioUnitManager *audioManager;
@@ -141,10 +141,33 @@ int get_audio_data_fun(void *inRefCon, const void *audio_frame_bytes,unsigned lo
 
 int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned long length,struct gl_frame_type frame_info) {
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
-    [vc createYUVFrameData:video_frame_bytes length:length frameInfo:frame_info];
+    [vc createFrameModelWithData:video_frame_bytes length:length frameInfo:frame_info];
     return 0;
 }
 
+/**
+ 将一帧二进制数据封装到模型中
+ */
+- (void)createFrameModelWithData:(const void *)buffer length:(unsigned long)length frameInfo:(struct gl_frame_type)frameInfo {
+    switch (frameInfo.format) {
+        case 0://yuv数据
+            {
+                [self createYUVFrameData:buffer length:length frameInfo:frameInfo];
+            }
+            break;
+        case 2://rgb数据
+        {
+            [self createYUVFrameData:buffer length:length frameInfo:frameInfo];
+        }
+            break;
+        default:{
+            printf("error:un recognize vider frame format:%d",frameInfo.format);
+        }
+            break;
+    }
+}
+
+//创建一帧yuv模型
 - (void)createYUVFrameData:(const void *)buffer length:(unsigned long)length frameInfo:(struct gl_frame_type)frameInfo{
     NSUInteger ylenght = length*2/3;
     
@@ -161,6 +184,20 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     fmodel.lumaY = dataY;
     fmodel.chrominanceU = dataU;
     fmodel.chromaV = dataV;
+    
+    [self.videoView addFrame:fmodel];
+    
+}
+
+//创建一帧rgb模型
+- (void)createRGBFrameData:(const void *)buffer length:(unsigned long)length frameInfo:(struct gl_frame_type)frameInfo{
+    
+    GlVideoFrameRGBModel *fmodel = [[GlVideoFrameRGBModel alloc] init];
+    fmodel.width = frameInfo.width;
+    fmodel.height = frameInfo.height;
+    fmodel.time = frameInfo.time;
+    fmodel.duration = frameInfo.duration;
+    fmodel.rgbData = [NSData dataWithBytes:buffer length:length];
     
     [self.videoView addFrame:fmodel];
     
@@ -261,20 +298,24 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
     
 }
 
-#pragma mark 全屏
+#pragma mark 横屏通知
 //旋转方向
 - (void)interfaceOrientation:(UIInterfaceOrientation)orientation
 {
+    
     if ([[UIDevice currentDevice] respondsToSelector:@selector(setOrientation:)]) {
         SEL selector             = NSSelectorFromString(@"setOrientation:");
         NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[UIDevice instanceMethodSignatureForSelector:selector]];
         [invocation setSelector:selector];
         [invocation setTarget:[UIDevice currentDevice]];
         int val                  = orientation;
-        
+
         [invocation setArgument:&val atIndex:2];
         [invocation invoke];
     }
+    
+    //方法二配合shouldAutorotate返回NO,
+    //[[UIApplication sharedApplication] setStatusBarOrientation:orientation];
 }
 
 -(void)deviceOrientationDidChange:(NSNotification *)notification{
@@ -314,6 +355,10 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
             break;
     }
 }
+
+//- (BOOL)shouldAutorotate {
+//    return NO;
+//}
 
 - (void)dealloc {
     gl_exit_decoder();
