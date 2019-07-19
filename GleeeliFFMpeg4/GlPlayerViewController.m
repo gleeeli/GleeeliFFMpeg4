@@ -162,6 +162,7 @@ int get_video_data_fun(void *inRefCon,const void *video_frame_bytes,unsigned lon
             break;
         default:{
             printf("error:un recognize vider frame format:%d",frameInfo.format);
+            [self createYUVFrameData:buffer length:length frameInfo:frameInfo];
         }
             break;
     }
