@@ -99,7 +99,7 @@
 }
 
 #pragma mark 解码通知
-//得到时长等信息
+//得到时长，音频初始化需要的信息
 void gl_get_format_info_fun(void *inRefCon,struct gl_format_type info) {
     GlPlayerViewController *vc = (__bridge GlPlayerViewController *)inRefCon;
     

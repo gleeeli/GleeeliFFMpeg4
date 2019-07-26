@@ -14,7 +14,7 @@
  解码音频
  
  @param outfilename pcm文件路径
- @param filename 音频文件如mp3
+ @param filename 音频文件如mp2
  */
 int start_main_decode_audio4(const char *outfilename, const char *filename);
 #endif /* decode_audio_4_h */
